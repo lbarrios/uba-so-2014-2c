@@ -1,0 +1,163 @@
+\documentclass[a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorinlistoftodos]{todonotes}
+
+\usepackage{multicol}
+\usepackage{makeidx}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage[utf8]{inputenc}
+\usepackage{verbatim}
+\usepackage{listings}
+\lstset{language=C++, showstringspaces=false, tabsize=2, breaklines=true, title=\lstname}
+
+\usepackage[margin=0.5in]{geometry}
+
+\title{TP2 Metnum}
+
+\author{Pedro Rodriguez, Gonzalo, Ezequiel}
+
+\date{\today}
+
+\makeindex
+
+\begin{document}
+\newgeometry{margin=2cm}
+\pagenumbering{gobble}
+\raggedleft
+\includegraphics[width=8cm]{logo1.jpg}\\
+
+\raggedright
+\vspace{3cm}
+{\Huge \bfseries Trabajo Práctico 1}
+\rule{\textwidth}{0.02in}
+\large Martes 16 de Septiembre de 2014 \hfill Sistemas Operativos
+\vspace{1.5cm}
+
+ 
+\centering \LARGE Scheduling 
+\vspace{1.5cm}
+
+\normalsize
+\begin{tabular}{|l@{\hspace{4ex}}c@{\hspace{4ex}}l|}
+        \hline
+        \rule{0pt}{1.2em}Integrante & LU & Correo electr\'onico\\[0.2em]
+        \hline
+        \rule{0pt}{1.2em}  Pedro Rodriguez &197/12 &\tt pedro3110.jim@gmail.com \\[0.2em]
+        \rule{0pt}{1.2em}  Gonzalo Benegas &??? &\tt  gsbenegas@gmail.com \\[0.2em]
+        \rule{0pt}{1.2em}  Ezequiel  Barrios &??? &\tt ezequiel.barrios@gmail.com \\[0.2em]
+        \hline
+\end{tabular}
+
+\vspace{1.0cm}
+\raggedright
+
+\begin{multicols}{2}
+\includegraphics[width=8cm]{logo-uba.png}
+
+\columnbreak
+\vspace*{4.5cm}
+\raggedleft
+\textbf{Facultad de Ciencias Exactas y Naturales}\\
+Universidad de Buenos Aires\\
+\small
+Ciudad Universitaria - (Pabellon I/Planta Baja)\\
+Intendente G\"uiraldes 2160 - C1428EGA\\
+Ciudad Autonoma de Buenos Aires - Rep. Argentina\\
+Tel/Fax: (54 11) 4576-3359\\
+http://www.fcen.uba.ar
+\end{multicols}
+
+\restoregeometry
+
+\clearpage
+
+\pagenumbering{arabic}
+
+\tableofcontents
+
+\vspace{3cm}
+
+\begin{abstract}
+En el presente trabajo pr\'actico estudiaremos algunos de los m\'etodos m\'as com\'unmente utilizados 
+en la actualidad por distintos sistemas operativos para manejar correcta y eficientemente los 
+diversos procesos que se ejecutan concurrentemente en m\'aquinas con uno o m\'as procesadores. \\
+Intentaremos detectar las ventajas y desventajas de cada m\'etodo, as\'i como los escenarios en los
+cuales uno puede ser m\'as eficiente que otro. Para esto, dividimos el TP en tres partes: en la
+primera, presentamos el simulador simusched y lo corremos para algunas tareas espec\'ificas. En la
+segunda parte, extendemos el simulador con nuevos schedulers implementados por nosotros y finalmente,
+en la tercera parte evaluamos y analizamos los distintos algoritmos de scheduling ya presentados. \\
+\end{abstract}
+
+\index{Parte I - Entendiendo el simulador simusched}
+\section{Parte I - Entendiendo el simulador simusched}
+
+\subsection{Ejercicio 1}
+En este ejercicio, programamos la tarea TaskConsola, que simular\'ia una tarea interactiva con
+el usuario. \\
+Para la implementaci\'on de esta tarea, primero tuvimos que registrarla para que el simulador la 
+reconozca en el archivo tasks.cpp, con la funci\'on tasksinit(void). En ese mismo archivo implementamos
+la tarea, que para el proceso n\'umero pid recibe los tres par\'ametros: n, bmin y bmax. Simplemente
+hacemos un ciclo que cicle n veces y que cada vez tome un entero al azar $r$ entre $bmin$ y 
+$bmax$, y cada vez llamamos a la funci\'on usoIO(pid, r), que simula hacer uso de dispositivos de
+entrada/salida. \\
+Nota(1): se denomina llamada bloqueante a aquellas llamadas en las que, si lo que esta  
+solicita no est\'a disponible, entonces el proceso llamador se queda bloqueado a la espera de un
+resultado. Es decir, no permite que otros procesos dependientes de este sigan ejecutando. Por 
+el contrario, en una llamada no bloqueante, si el proceso llamador no encuentra lo que estaba
+buscando, el proceso devuelve de todas formas alg\'un resultado, permitiendo que otros procesos
+sigan ejecutando sin tener que esperar a que este proceso llamador reciba el resultado que est\'a
+esperando. \\
+Nota(2): para elegir el n\'umero pseudo-aleatorio hacemos uso de la funci\'on rand() provista
+por la librer\'a standard de C. \\
+
+\subsection{Ejercicio 2}
+Para seguir entendiendo el funcionamiento del simulador simusched, ahora pasamos a escribir un lote
+de 3 tareas distintas: una intensiva en CPU y las otras dos de tipo interactivo. Vamos a ejecutar y
+graficar la simulaci\'on usando el algoritmo FCFS para 1, 2 y 3 n\'ucleos. \\
+
+
+\index{Parte II - Extendiendo el simulador con nuevos schedulers}
+\section{Parte II - Extendiendo el simulador con nuevos schedulers}
+
+\subsection{Ejercicio 3}
+\subsection{Ejercicio 4}
+\subsection{Ejercicio 5}
+En este ejercicio, basados en el paper de Waldspurger, C.A. y Weihl en el cu\'al presentan un 
+novedoso sistema de Scheduling llamado $Lottery Scheduling$, implementamos una clase que llamamos
+SchedLottery que recibe como par\'ametros el quantum que se va a estar simulando y una semilla 
+pseudo-aleatoria, que el scheduler va a utilizar para el manejo de los procesos. Como dice en el
+enunciado, b\'asicamente nos interes\'o implementar la idea b\'asica del algoritmo y la 
+optimizaci\'on de tickets compensatorios. \\
+
+
+
+
+\index{Parte III - Evaluando los algoritmos de scheduling}
+\section{Parte III - Evaluando los algoritmos de scheduling}
+
+\subsection{Ejercicio 6}
+\subsection{Ejercicio 7}
+\subsection{Ejercicio 8}
+\subsection{Ejercicio 9}
+\subsection{Ejercicio 10}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}
