@@ -1,0 +1,10 @@
+# Latex temporary files #
+#########################
+*.aux
+*.log
+*.out
+*.fdb_latexmk
+*.fls
+*.ilg
+*.ind
+
