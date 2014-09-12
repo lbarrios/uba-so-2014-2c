@@ -1,5 +1,4 @@
-#ifndef __SCHED_RR__
-#define __SCHED_RR__
+#pragma once
 
 #include <vector>
 #include <queue>
@@ -14,7 +13,9 @@ class SchedRR : public SchedBase {
 		virtual int tick(int cpu, const enum Motivo m);
 
 private:
-		int next(int cpu);
+		int run_next(int cpu);
+		int cores_count;
+		std::queue<int> process_queue;
+		std::vector<int> cores_quantums;
+		std::vector<int> cores_ticks;
 };
-
-#endif

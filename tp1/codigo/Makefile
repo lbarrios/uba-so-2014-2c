@@ -1,11 +1,12 @@
 export LC_ALL=C
-CXXFLAGS= -Wall -pedantic -g -ggdb
+CXX=g++-4.6
+CXXFLAGS= -Wall -pedantic -g -ggdb -std=c++0x
 LDFLAGS= -lpthread
 
 OBJS=main.o simu.o basesched.o basetask.o tasks.o sched_rr.o sched_fcfs.o sched_rr2.o sched_lottery.o
 MAIN=simusched
 
-.PHONY: all
+.PHONY: all clean new runRR
 all: $(MAIN)
 
 $(MAIN): $(OBJS)
@@ -23,9 +24,19 @@ simu.o: simu.cpp simu.h basetask.h basesched.h
 simusched.o: simusched.cpp basetask.h basesched.h tasks.h
 tasks.o: tasks.cpp tasks.h basetask.h
 
-.PHONY: clean
-clean:
+clean: cleanRR
 	rm -f $(OBJS) $(MAIN)
 
-.PHONY: new
 new: clean all
+
+RR_TEMP_TXT=sched_rr_out_temp.txt
+RR_TEMP_DBG=sched_rr_dbg_temp.txt
+RR_TEMP_PNG=sched_rr_out_temp.png
+runRR: all
+	clear && \
+	./simusched prueba.tsk 2 1 1 SchedRR 1 5 2> $(RR_TEMP_DBG) > $(RR_TEMP_TXT) && \
+	cat $(RR_TEMP_DBG) && \
+	python graphsched.py < $(RR_TEMP_TXT) > $(RR_TEMP_PNG) && xdg-open $(RR_TEMP_PNG)
+
+cleanRR:
+	rm -f $(RR_TEMP_TXT) $(RR_TEMP_PNG)
