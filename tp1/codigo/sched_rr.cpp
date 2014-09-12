@@ -16,13 +16,13 @@ SchedRR::SchedRR(vector<int> argn)
 	// Round robin recibe la cantidad de cores y sus cpu_quantum por parámetro
 	this->cores_count = argn[0];
 	DEBUG1(this->cores_count);
-	for(int i=1; i<=this->cores_count; i++)
-	{
-		DEBUG1(argn[i]);
-	}
 	// Genero la cola de quantums
 	this->cores_quantums.reserve(this->cores_count);
-	copy(argn.begin()++, argn.end(), this->cores_quantums.begin());
+	copy((++argn.begin()), argn.end(), this->cores_quantums.begin());
+	for(int i=0; i<this->cores_count; i++)
+	{
+		DEBUG1(cores_quantums[i]);
+	}
 	// Asigno el tamaño de la cola de ticks
 	this->cores_ticks.resize(this->cores_count);
 }
@@ -33,7 +33,7 @@ SchedRR::~SchedRR() {
 
 void SchedRR::load(int pid) {
 	// Llegó una tarea nueva, la pongo en la cola
-	cerr << "load(); cargando nueva tarea: " << pid << endl;
+	cerr << "load(); cargando nueva tarea en la cola: " << pid << endl;
 	this->process_queue.push(pid);
 }
 
@@ -54,6 +54,7 @@ int SchedRR::run_next(int cpu)
 		int sig = this->process_queue.front(); 
 		this->process_queue.pop();
 		this->cores_ticks[cpu] = 0;
+		cerr << "Cambiando de tarea en la CPU "<<cpu<<"... current_pid:" << current_pid(cpu) << ", siguiente tarea:" << sig << endl;
 		return sig;
 	}
 	
@@ -62,11 +63,11 @@ int SchedRR::run_next(int cpu)
 }
 
 int SchedRR::tick(int cpu, const enum Motivo m) 
-{
-	DEBUG2(cpu, m);
+{	
 	// Sumo un tick al contador de ticks de esa CPU
 	this->cores_ticks[cpu]++;
-	DEBUG1(this->cores_ticks[cpu]);
+
+	cerr<<endl<<"TICK. CPU:"<<cpu<<", motivo:"<<m<<", ticks:"<< this->cores_ticks[cpu] <<"/" << this->cores_quantums[cpu] <<endl;
 
 	// Si el motivo es EXIT, corro el siguiente proceso
 	if (m == EXIT)
@@ -91,10 +92,10 @@ int SchedRR::tick(int cpu, const enum Motivo m)
 		// Si el proceso actual es IDLE, o alcancé el QUANTUM, llamo a run_next
 		if (current_pid(cpu) == IDLE_TASK || this->cores_ticks[cpu] >= this->cores_quantums[cpu])
 		{
-			cerr << "\tCambiando de tarea... current_pid:" << current_pid(cpu) << endl;
 			// Si el proceso actual no es IDLE, lo cargo en la cola
 			if(current_pid(cpu) != IDLE_TASK)
 			{
+				cerr << "Alcancé el quantum" << endl;
 				this->process_queue.push(current_pid(cpu));
 			}
 			return this->run_next(cpu);
