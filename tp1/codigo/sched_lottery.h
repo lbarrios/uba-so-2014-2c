@@ -12,6 +12,7 @@ using namespace std;
 struct ticket {
     int pid;
     int count;
+    int to_be_compensated;
     ticket(int pid, int count): pid(pid), count(count) {};
 };
 
@@ -32,6 +33,7 @@ private:
     void desaloja(int);
     int tickets_index(int);
     int total_tickets;
+    void imprimi_tickets();
 };
 
 #endif

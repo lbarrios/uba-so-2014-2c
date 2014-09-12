@@ -1,5 +1,6 @@
 #include "tasks.h"
 #include "stdlib.h"
+#include <ctime>
 
 #define SEED 0
 
@@ -22,7 +23,7 @@ void TaskAlterno(int pid, vector<int> params) { // params: ms_pid, ms_io, ms_pid
 }
 
 void TaskConsola(int pid, vector<int> params) { // params: n, bmin, bmax, ...
-    srand(SEED);
+    srand(time(NULL));
     int r;
     int n = params[0];
     int bmin = params[1];
