@@ -20,7 +20,7 @@
 
 \title{TP2 Metnum}
 
-\author{Pedro Rodriguez, Gonzalo, Ezequiel}
+\author{Pedro Rodriguez, Gonzalo Benegas, Leandro Ezequiel Barrios}
 
 \date{\today}
 
@@ -49,8 +49,8 @@
         \rule{0pt}{1.2em}Integrante & LU & Correo electr\'onico\\[0.2em]
         \hline
         \rule{0pt}{1.2em}  Pedro Rodriguez &197/12 &\tt pedro3110.jim@gmail.com \\[0.2em]
-        \rule{0pt}{1.2em}  Gonzalo Benegas &??? &\tt  gsbenegas@gmail.com \\[0.2em]
-        \rule{0pt}{1.2em}  Ezequiel  Barrios &??? &\tt ezequiel.barrios@gmail.com \\[0.2em]
+        \rule{0pt}{1.2em}  Gonzalo Segundo Benegas &958/12 &\tt  gsbenegas@gmail.com \\[0.2em]
+        \rule{0pt}{1.2em}  Leandro Ezequiel Barrios &404/11 &\tt ezequiel.barrios@gmail.com \\[0.2em]
         \hline
 \end{tabular}
 
@@ -134,6 +134,32 @@ SchedLottery que recibe como par\'ametros el quantum que se va a estar simulando
 pseudo-aleatoria, que el scheduler va a utilizar para el manejo de los procesos. Como dice en el
 enunciado, b\'asicamente nos interes\'o implementar la idea b\'asica del algoritmo y la 
 optimizaci\'on de tickets compensatorios. \\
+La clase SchedLottery tiene como parte p\'ublica las funciones $load(int pid)$, $unblock(int pid)$ 
+y $tick(cpu, Motivo)$. \\
+i) La funci\'on load la utilizamos para notificar al scheduler
+que un nuevo proceso ha llegado. Cada vez que llega un nuevo proceso le damos un ticket. \\
+ii) La funci\'on
+$tick(cpu, motivo)$. El par\'ametro motivo puede significar que una de tres cosas
+ocurrieron durante el \'ultimo ciclo del reloj: la tarea pid consumi\'o todo su
+ciclo utilizando el CPU (en cuyo caso..), la tarea ejecut\'o una llamada bloqueante o permaneci\'o
+bloqueada durante el \'ultimo ciclo (en cuyo caso..) \'o porque la tarea pid termin\'o (en cuyo caso
+...). \\
+iii) La funci\'on unblock(pid) hace que en la pr\'oxima llamada a la funci\'on tick, el proceso pid 
+est\'e disponible para ejecutar. Lo que hacemos, es entregarle al proceso pid la cantidad de tickets
+que ten\'ia el proceso antes de ser bloqueado multiplicado por la compensaci\'on correspondiente. \\
+Por otro lado, la clase SchedLottery tiene una parte privada, que consta de variables como $quantum$, 
+que usamos para saber el quantum que tiene disponible cada proceso para ejecutarse, $seed$, que
+usamos como semilla para elegir el ticket ganador cada vez que hagamos un sorteo, $vector<ticket>$, que
+usamos para saber qu\'e tickets corresponden a cada proceso, $totaltickets$ para tener r\'apido acceso
+a la cantidad de tickets que hay distribuidos entre los procesos y $ticketnumber$ que usamos para 
+llevar la cuenta de cu\'antas veces llamamos a la funci\'on tick(cpu,motivo). Adem\'as, contamos con 
+las funciones privadas compensa(int), desaloja(int) y ticketsindex(int). La primera se encarga de
+calcular y asignar la compensaci\'on deseada a un proceso cuando corresponda; la segunda de que cuando
+se bloquea un proceso, no est\'e disponible para ejecutar en la pr\'oxima ejecuci\'on de la funci\'on
+tick(cpu,motivo). Es decir, que la probabilidad de ser elegible en el sorteo sobre los tickets sea cero.
+Para eso, lo que hicimos fue sacarle todos los tickets temporalmente a dicho proceso. \\ 
+
+
 
 
 
