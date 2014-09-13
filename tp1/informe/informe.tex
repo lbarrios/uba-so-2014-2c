@@ -120,6 +120,7 @@ por la librer\'a standard de C. \\
 Para seguir entendiendo el funcionamiento del simulador simusched, ahora pasamos a escribir un lote
 de 3 tareas distintas: una intensiva en CPU y las otras dos de tipo interactivo. Vamos a ejecutar y
 graficar la simulaci\'on usando el algoritmo FCFS para 1, 2 y 3 n\'ucleos. \\
+Pudimos observar que ...
 
 
 \index{Parte II - Extendiendo el simulador con nuevos schedulers}
@@ -141,9 +142,13 @@ que un nuevo proceso ha llegado. Cada vez que llega un nuevo proceso le damos un
 ii) La funci\'on
 $tick(cpu, motivo)$. El par\'ametro motivo puede significar que una de tres cosas
 ocurrieron durante el \'ultimo ciclo del reloj: la tarea pid consumi\'o todo su
-ciclo utilizando el CPU (en cuyo caso..), la tarea ejecut\'o una llamada bloqueante o permaneci\'o
-bloqueada durante el \'ultimo ciclo (en cuyo caso..) \'o porque la tarea pid termin\'o (en cuyo caso
-...). \\
+ciclo utilizando el CPU (en cuyo caso incrementamos la cantidad de ticks y si esta cantidad supera el
+quantum, la desalojamos), la tarea ejecut\'o una llamada bloqueante o permaneci\'o 
+bloqueada durante el \'ultimo ciclo (en cuyo caso proveemos al proceso bloqueado la compensaci\'on 
+de tickets correspondiente) \'o porque la tarea pid termin\'o (en cuyo caso desalojamos la tarea
+actual). Despu\'es de hacer estos chequeos, corremos run_lottery, que se encarga de efectuar el 
+sorteo de tickets para la pr\'oxima vez que se necesite elegir un proceso ganador para asignarle 
+los recursos necesarios. \\
 iii) La funci\'on unblock(pid) hace que en la pr\'oxima llamada a la funci\'on tick, el proceso pid 
 est\'e disponible para ejecutar. Lo que hacemos, es entregarle al proceso pid la cantidad de tickets
 que ten\'ia el proceso antes de ser bloqueado multiplicado por la compensaci\'on correspondiente. \\
@@ -158,8 +163,6 @@ calcular y asignar la compensaci\'on deseada a un proceso cuando corresponda; la
 se bloquea un proceso, no est\'e disponible para ejecutar en la pr\'oxima ejecuci\'on de la funci\'on
 tick(cpu,motivo). Es decir, que la probabilidad de ser elegible en el sorteo sobre los tickets sea cero.
 Para eso, lo que hicimos fue sacarle todos los tickets temporalmente a dicho proceso. \\ 
-
-
 
 
 
