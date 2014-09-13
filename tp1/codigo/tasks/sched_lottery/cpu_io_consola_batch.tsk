@@ -4,3 +4,5 @@
 *3 TaskIO 10 10
 @10:
 *3 TaskConsola 10 1 10
+@10:
+*3 TaskBatch 20 5

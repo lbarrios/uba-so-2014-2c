@@ -1,8 +1,10 @@
 #include "tasks.h"
 #include "stdlib.h"
+#include "assert.h"
 #include <ctime>
 
 #define SEED 0
+#define FOR(var, range) for (int var = 0; var < range; var++) 
 
 using namespace std;
 
@@ -22,7 +24,7 @@ void TaskAlterno(int pid, vector<int> params) { // params: ms_pid, ms_io, ms_pid
 	}
 }
 
-void TaskConsola(int pid, vector<int> params) { // params: n, bmin, bmax, ...
+void TaskConsola(int pid, vector<int> params) { // params: n, bmin, bmax
     srand(time(NULL));
     int r;
     int n = params[0];
@@ -34,7 +36,26 @@ void TaskConsola(int pid, vector<int> params) { // params: n, bmin, bmax, ...
     }
 }
 
-
+void TaskBatch(int pid, vector<int> params) { // params: total_cpu, cant_bloqueos
+    int total_cpu = params[0];
+    int cant_bloqueos = params[1];
+    assert(cant_bloqueos < total_cpu);
+    vector<bool> tiempo_bloqueo(total_cpu, false);
+    srand(time(NULL));
+    int r;
+    FOR(i, cant_bloqueos) {
+        r = rand() % total_cpu;
+        while(tiempo_bloqueo[r]) {
+            r = rand() % total_cpu;
+        }
+        tiempo_bloqueo[r] = true;
+    }
+    FOR(i, total_cpu) {
+        if (tiempo_bloqueo[i])
+            uso_IO(pid, 1);
+        else uso_CPU(pid, 1);
+    }
+}
 
 void tasks_init(void) {
 	/* Todos los tipos de tareas se deben registrar acá para poder ser usadas.
@@ -44,4 +65,5 @@ void tasks_init(void) {
 	register_task(TaskIO, 2);
 	register_task(TaskAlterno, -1);
 	register_task(TaskConsola, 3);
+	register_task(TaskBatch, 2);
 }

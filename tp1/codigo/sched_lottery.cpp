@@ -3,6 +3,7 @@
 using namespace std;
 
 #define DEBUG(var) cout << #var << ": " << var << endl;
+#define FOR(var, range) for (int var = 0; var < range; var++) 
 
 SchedLottery::SchedLottery(vector<int> argn) {
     quantum = argn[1];
@@ -27,7 +28,7 @@ void SchedLottery::unblock(int pid) {
 }
 
 int SchedLottery::tickets_index(int pid) {
-    for(int i = 0; i < tickets.size(); i++) {
+    FOR(i, tickets.size()) {
         if (tickets[i].pid == pid) return i;
     }
     throw invalid_argument("el pid no esta en tickets");
@@ -59,7 +60,7 @@ int SchedLottery::run_lottery() {
     int winner = rand() % total_tickets;
     int i = 0;
     int accum = tickets[0].count;
-    while (accum < winner) {
+    while (accum <= winner) {
         i++;
         accum += tickets[i].count;
     }
@@ -90,11 +91,9 @@ int SchedLottery::tick(int cpu, const enum Motivo m) {
 }
 
 void SchedLottery::imprimi_tickets() {
-    cout << "imprimiendo estado de los tickets" << endl;
-    for(int i = 0; i < tickets.size(); i++) {
+    DEBUG(total_tickets)
+    FOR(i, tickets.size()) {
         DEBUG(i)
-        DEBUG(tickets[i].pid)
         DEBUG(tickets[i].count)
     }
-    cout << "impreso el estado de los tickets" << endl;
 }
