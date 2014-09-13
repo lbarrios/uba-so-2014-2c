@@ -1,8 +1,0 @@
-TaskCPU 3
-@10:
-TaskCPU 1
-@3:
-*2 TaskCPU 7
-TaskCPU 3
-@5:
-*5 TaskIO 20 10
