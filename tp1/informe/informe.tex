@@ -146,7 +146,7 @@ ciclo utilizando el CPU (en cuyo caso incrementamos la cantidad de ticks y si es
 quantum, la desalojamos), la tarea ejecut\'o una llamada bloqueante o permaneci\'o 
 bloqueada durante el \'ultimo ciclo (en cuyo caso proveemos al proceso bloqueado la compensaci\'on 
 de tickets correspondiente) \'o porque la tarea pid termin\'o (en cuyo caso desalojamos la tarea
-actual). Despu\'es de hacer estos chequeos, corremos run_lottery, que se encarga de efectuar el 
+actual). Despu\'es de hacer estos chequeos, corremos $run\_lottery$ que se encarga de efectuar el 
 sorteo de tickets para la pr\'oxima vez que se necesite elegir un proceso ganador para asignarle 
 los recursos necesarios. \\
 iii) La funci\'on unblock(pid) hace que en la pr\'oxima llamada a la funci\'on tick, el proceso pid 
