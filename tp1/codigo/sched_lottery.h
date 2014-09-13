@@ -12,7 +12,7 @@ using namespace std;
 struct ticket {
     int pid;
     int count;
-    int to_be_compensated;
+    int compensation;
     ticket(int pid, int count): pid(pid), count(count) {};
 };
 

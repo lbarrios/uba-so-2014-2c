@@ -20,8 +20,9 @@ void SchedLottery::load(int pid) {
 }
 
 void SchedLottery::unblock(int pid) {
-    int new_tickets = tickets[tickets_index(pid)].to_be_compensated;
-    tickets[tickets_index(pid)].count = new_tickets;
+    ticket *pid_tickets = &tickets[tickets_index(pid)];
+    int new_tickets = pid_tickets->compensation;
+    pid_tickets->count = new_tickets;
     total_tickets += new_tickets;
 }
 
@@ -33,33 +34,23 @@ int SchedLottery::tickets_index(int pid) {
 }
 
 void SchedLottery::compensa(int pid) {
-    int compensation = int((float)quantum / float(tick_number+1));
-    int previous_count = tickets[tickets_index(pid)].count;
-    tickets[tickets_index(pid)].to_be_compensated = compensation*previous_count;
-    tickets[tickets_index(pid)].count = 0;
+    int ratio = int((float)quantum / float(tick_number+1));
+    ticket *pid_tickets = &tickets[tickets_index(pid)];
+    int previous_count = pid_tickets->count;
+    pid_tickets->compensation = ratio*previous_count;
+    pid_tickets->count = 0;
     total_tickets -= previous_count;
 }
 
 void SchedLottery::desaloja(int pid) {
     if (pid != IDLE_TASK) {
-        total_tickets -= tickets[tickets_index(pid)].count;
-        tickets.erase(tickets.begin() + tickets_index(pid));
+        int i = tickets_index(pid);
+        total_tickets -= tickets[i].count;
+        tickets.erase(tickets.begin()+i);
     }
-}
-
-void SchedLottery::imprimi_tickets() {
-    cout << "imprimiendo estado de los tickets" << endl;
-    for(int i = 0; i < tickets.size(); i++) {
-        DEBUG(i)
-        DEBUG(tickets[i].pid)
-        DEBUG(tickets[i].count)
-    }
-    cout << "impreso el estado de los tickets" << endl;
 }
 
 int SchedLottery::run_lottery() {
-    //imprimi_tickets();
-
     tick_number = 0;
     if (total_tickets == 0) {
         return IDLE_TASK;
@@ -72,35 +63,38 @@ int SchedLottery::run_lottery() {
         i++;
         accum += tickets[i].count;
     }
+    while (tickets[i].count == 0) i++;  // esto es importante
     if (i >= tickets.size()) {
-        DEBUG(i)
-        DEBUG(accum)
-        DEBUG(winner)
-        DEBUG(total_tickets)
-        DEBUG(tickets.size())
         throw invalid_argument("nadie es duenio de ese ticket");
     }
 
-    if (tickets[i].count != 0) {
-        total_tickets -= tickets[i].count - 1;
-        tickets[i].count = 1;
-    }
+    // descompenso
+    int *count = &tickets[i].count;
+    total_tickets -= (*count - 1);
+    *count = 1;
+
     return tickets[i].pid;
 }
 
 int SchedLottery::tick(int cpu, const enum Motivo m) {
+    int pid = current_pid(cpu);
     if (m == TICK) {
         tick_number++;
-        if (tick_number >= quantum) {
-            // desalojo a la tarea
-        } else 
-            return current_pid(cpu);
-
-    } else if (m == BLOCK) {
-        compensa(current_pid(cpu));
-    } else if (m == EXIT) {
-        desaloja(current_pid(cpu));
-
-    }
+        if (tick_number < quantum)
+            return pid;
+    } else if (m == BLOCK)
+        compensa(pid);
+    else if (m == EXIT)
+        desaloja(pid);
     return run_lottery();
+}
+
+void SchedLottery::imprimi_tickets() {
+    cout << "imprimiendo estado de los tickets" << endl;
+    for(int i = 0; i < tickets.size(); i++) {
+        DEBUG(i)
+        DEBUG(tickets[i].pid)
+        DEBUG(tickets[i].count)
+    }
+    cout << "impreso el estado de los tickets" << endl;
 }
