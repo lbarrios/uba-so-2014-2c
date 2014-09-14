@@ -9,7 +9,7 @@
 
 using namespace std;
 
-#define CANT_PROCESOS 10
+#define CANT_PROCESOS 4
 
 struct ticket {
     int pid;
@@ -38,9 +38,11 @@ private:
     int total_tickets;
     void imprimi_tickets();
     void imprimi_acumulado();
+    void imprimi_tiempo_final();
 
     int total_ticks;
     int ticks_por_proceso[CANT_PROCESOS];
+    int tiempo_final[CANT_PROCESOS];
 };
 
 #endif

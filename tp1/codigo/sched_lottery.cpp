@@ -62,10 +62,12 @@ void SchedLottery::desaloja(int pid) {
         total_tickets -= tickets[i].count;
         tickets.erase(tickets.begin()+i);
     }
+    if (tickets.size() == 0) {
+        imprimi_tiempo_final();
+    }
 }
 
 int SchedLottery::run_lottery() {
-    imprimi_acumulado();
     tick_number = 0;
     if (total_tickets == 0) {
         return IDLE_TASK;
@@ -102,8 +104,10 @@ int SchedLottery::tick(int cpu, const enum Motivo m) {
         }
     } else if (m == BLOCK)
         compensa(pid);
-    else if (m == EXIT)
+    else if (m == EXIT) {
+        tiempo_final[pid] = total_ticks;
         desaloja(pid);
+    }
     return run_lottery();
 }
 
@@ -121,4 +125,11 @@ void SchedLottery::imprimi_acumulado() {
         cerr << ticks_por_proceso[i] << " ";
     }
     cerr << ticks_por_proceso[CANT_PROCESOS-1] << endl;
+}
+
+void SchedLottery::imprimi_tiempo_final() {
+    FOR(i, CANT_PROCESOS-1) {
+        cerr << tiempo_final[i] << " ";
+    }
+    cerr << tiempo_final[CANT_PROCESOS-1] << endl;
 }
