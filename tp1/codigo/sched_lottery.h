@@ -15,7 +15,7 @@ struct ticket {
     int pid;
     int count;
     int compensation;
-    ticket(int pid, int count): pid(pid), count(count) {};
+    ticket(int pid, int count): pid(pid), count(count) , compensation(1) {};
 };
 
 class SchedLottery : public SchedBase {
@@ -32,6 +32,7 @@ private:
     int tick_number;
     int run_lottery();
     void compensa(int);
+    void no_compensa(int);
     void desaloja(int);
     int tickets_index(int);
     int total_tickets;

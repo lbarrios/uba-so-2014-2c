@@ -41,10 +41,19 @@ int SchedLottery::tickets_index(int pid) {
 void SchedLottery::compensa(int pid) {
     int ratio = int((float)quantum / float(tick_number+1));
     ticket *pid_tickets = &tickets[tickets_index(pid)];
+
     int previous_count = pid_tickets->count;
     pid_tickets->compensation = ratio*previous_count;
     pid_tickets->count = 0;
     total_tickets -= previous_count;
+}
+
+void SchedLottery::no_compensa(int pid) {
+    ticket *pid_tickets = &tickets[tickets_index(pid)];
+
+    pid_tickets->count = 0;
+    pid_tickets->compensation = 1;
+    total_tickets--;
 }
 
 void SchedLottery::desaloja(int pid) {
@@ -85,10 +94,10 @@ int SchedLottery::run_lottery() {
 int SchedLottery::tick(int cpu, const enum Motivo m) {
     int pid = current_pid(cpu);
     if (m == TICK) {
+        ticks_por_proceso[pid]++;
         tick_number++;
         total_ticks++;
         if (tick_number < quantum) {
-            ticks_por_proceso[pid]++;
             return pid;
         }
     } else if (m == BLOCK)
@@ -107,9 +116,9 @@ void SchedLottery::imprimi_tickets() {
 }
 
 void SchedLottery::imprimi_acumulado() {
-    cerr << total_ticks << endl;
-    FOR(i, CANT_PROCESOS) {
+    cerr << total_ticks << " ";
+    FOR(i, CANT_PROCESOS-1) {
         cerr << ticks_por_proceso[i] << " ";
     }
-    cerr << endl;
+    cerr << ticks_por_proceso[CANT_PROCESOS-1] << endl;
 }

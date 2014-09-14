@@ -1,0 +1,1 @@
+./simusched ../experimentacion/ej9/prueba.tsk 1 1 1 SchedLottery 4 101 2> ticks.csv
