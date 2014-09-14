@@ -38,7 +38,7 @@ struct core_process_comparator_t
   {
     return a.active_process.size() < b.active_process.size();
   }
-} core_process_comparator;
+};
 
 class SchedRR2 : public SchedBase
 {

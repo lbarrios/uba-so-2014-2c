@@ -2,6 +2,8 @@
 #include <iostream>
 #include <algorithm>
 
+core_process_comparator_t comparator;
+
 /**
  * Round robin 2 recibe la cantidad de cores y sus respectivos quantum por parámetro
  */
@@ -30,7 +32,7 @@ SchedRR2::~SchedRR2()
 void SchedRR2::load( int pid )
 {
   // Obtengo el core con menos procesos activos
-  Core& core = *min_element( begin( this->cores ), end( this->cores ), core_process_comparator );
+  Core& core = *min_element( begin( this->cores ), end( this->cores ), comparator );
   // Agrego el proceso a la cola del core
   core.process_queue.push( pid );
   core.active_process.push_back( pid );
