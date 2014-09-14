@@ -5,11 +5,15 @@ using namespace std;
 #define DEBUG(var) cout << #var << ": " << var << endl;
 #define FOR(var, range) for (int var = 0; var < range; var++) 
 
+
 SchedLottery::SchedLottery(vector<int> argn) {
     quantum = argn[1];
     seed = argn[2];
     srand(seed);
     total_tickets = 0;
+
+    total_ticks = 0;
+    FOR(i, CANT_PROCESOS) ticks_por_proceso[i] = 0;
 }
 
 SchedLottery::~SchedLottery() {
@@ -52,6 +56,7 @@ void SchedLottery::desaloja(int pid) {
 }
 
 int SchedLottery::run_lottery() {
+    imprimi_acumulado();
     tick_number = 0;
     if (total_tickets == 0) {
         return IDLE_TASK;
@@ -81,8 +86,11 @@ int SchedLottery::tick(int cpu, const enum Motivo m) {
     int pid = current_pid(cpu);
     if (m == TICK) {
         tick_number++;
-        if (tick_number < quantum)
+        total_ticks++;
+        if (tick_number < quantum) {
+            ticks_por_proceso[pid]++;
             return pid;
+        }
     } else if (m == BLOCK)
         compensa(pid);
     else if (m == EXIT)
@@ -96,4 +104,12 @@ void SchedLottery::imprimi_tickets() {
         DEBUG(i)
         DEBUG(tickets[i].count)
     }
+}
+
+void SchedLottery::imprimi_acumulado() {
+    cerr << total_ticks << endl;
+    FOR(i, CANT_PROCESOS) {
+        cerr << ticks_por_proceso[i] << " ";
+    }
+    cerr << endl;
 }
