@@ -9,6 +9,7 @@ core_process_comparator_t comparator;
  */
 SchedRR2::SchedRR2( vector<int> argn )
 {
+
   // Asigno el tamaño de la cola de cores
   this->cores.resize( argn[0] );
 
@@ -17,6 +18,7 @@ SchedRR2::SchedRR2( vector<int> argn )
   {
     this->cores[i].quantum = argn[i + 1];
   }
+
 }
 
 SchedRR2::~SchedRR2()
@@ -121,7 +123,7 @@ int SchedRR2::tick( int cpu, const enum Motivo m )
     // Si el motivo es EXIT, lo quito de la cola de activos
     if ( m == EXIT )
     {
-      auto p = this->cores[cpu].active_process;
+      auto& p = this->cores[cpu].active_process;
       this->cores[cpu].active_process.erase( find( begin( p ), end( p ), pid ) );
     }
 
