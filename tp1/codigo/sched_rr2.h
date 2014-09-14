@@ -1,20 +1,56 @@
-#ifndef __SCHED_RR2__
-#define __SCHED_RR2__
+#pragma once
 
 #include <vector>
 #include <queue>
+#include <stdexcept>
 #include "basesched.h"
 
-class SchedRR2 : public SchedBase {
-	public:
-		SchedRR2(std::vector<int> argn);
-        ~SchedRR2();
-		virtual void load(int pid);
-		virtual void unblock(int pid);
-		virtual int tick(int cpu, const enum Motivo m);
+using namespace std;
 
-	private:
-		int next(int cpu);
+/**
+ * Este struct representa un core
+ */
+struct Core
+{
+  int quantum = 0;
+  int ticks_count = 0;
+  vector<int> active_process = vector<int>();
+  queue<int> process_queue = queue<int>();
+  int runNextProcess( void )
+  {
+    int sig = this->process_queue.front();
+    this->process_queue.pop();
+    this->ticks_count = 0;
+    return sig;
+  }
+  bool isQuantumExpired()
+  {
+    return this->ticks_count >= this->quantum;
+  }
 };
 
-#endif
+/**
+ * Compara dos cores por cantidad de procesos
+ */
+struct core_process_comparator_t
+{
+  bool operator() ( Core a, Core b )
+  {
+    return a.active_process.size() < b.active_process.size();
+  }
+} core_process_comparator;
+
+class SchedRR2 : public SchedBase
+{
+public:
+  SchedRR2( vector<int> argn );
+  ~SchedRR2();
+  virtual void load( int pid );
+  virtual void unblock( int pid );
+  virtual int tick( int cpu, const enum Motivo m );
+
+private:
+  int run_next( int cpu );
+  Core* getProcessCore( int );
+  vector<Core> cores;
+};

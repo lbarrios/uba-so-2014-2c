@@ -4,18 +4,19 @@
 #include <queue>
 #include "basesched.h"
 
-class SchedRR : public SchedBase {
-	public:
-		SchedRR(std::vector<int> argn);
-        ~SchedRR();
-		virtual void load(int pid);
-		virtual void unblock(int pid);
-		virtual int tick(int cpu, const enum Motivo m);
+class SchedRR : public SchedBase
+{
+public:
+  SchedRR( std::vector<int> );
+  ~SchedRR();
+  virtual void load( int );
+  virtual void unblock( int );
+  virtual int tick( int, const enum Motivo );
 
 private:
-		int run_next(int cpu);
-		int cores_count;
-		std::queue<int> process_queue;
-		std::vector<int> cores_quantums;
-		std::vector<int> cores_ticks;
+  int run_next( int );
+  int cores_count;
+  std::queue<int> process_queue;
+  std::vector<int> cores_quantums;
+  std::vector<int> cores_ticks;
 };
