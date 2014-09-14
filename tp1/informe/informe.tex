@@ -120,45 +120,95 @@ por la librer\'a standard de C. \\
 Para seguir entendiendo el funcionamiento del simulador simusched, ahora pasamos a escribir un lote
 de 3 tareas distintas: una intensiva en CPU y las otras dos de tipo interactivo. Vamos a ejecutar y
 graficar la simulaci\'on usando el algoritmo FCFS para 1, 2 y 3 n\'ucleos. \\
-Pudimos observar que ...
+En el caso de la tarea que hace uso intensivo del cpu, pudimos observar que usando dos cpu's, las
+tareas se logran ejecutar pr\'acticamente en la mitad de tiempo (en el gr\'afico se ve claramente como
+se aprovecha el hecho de que hay dos cpu's, y en todo momento se puede observar c\'omo hay dos cpu's 
+trabajando al mismo tiempo en dos tareas distintas. Cuando introdujimos un tercer cpu, sucedi\'o 
+exactamente lo mismo: cada vez que alg\'un cpu terminaba de ejecutar un proceso, inmediatamente
+comenzaba a ejecutar el pr\'oximo proceso a\'un no atendido. \\
+En el caso de las tareas interactivas, pudimos observar los momentos en los que se detectaba que 
+alg\'un procesador era bloqueado y c\'omo en ese tiempo el procesador se quedaba trabado en la misma 
+tarea. Creemos que ese tiempo de espera podr\'ia ser aprovechado para seguir ejecutando alg\'un otro
+proceso, implementando alg\'un otro sistema de scheduling. \\
+Otra cosa importante a destacar, es que en los tres lotes de tareas, cuando pasamos de usar un \'unico
+core a usar dos, el tiempo total que se tard\'o en ejecutar todas las tareas disminuy\'o a la mitad.
+Mientras que cuando usamos tres cores, el tiempo no disminuy\'o a un tercio de lo que tardaba antes,
+que es lo que nosotros esper\'abamos. Esto nos da la pauta de que m\'as procesadores no siempre
+mucha m\'as eficiencia y velocidad: hay otros factores que son m\'as importantes, como el algoritmo de
+scheduling utilizado, y la consideraci\'on de las caracter\'isticas del lote de tareas que voy a querer
+correr. \\
 
 
 \index{Parte II - Extendiendo el simulador con nuevos schedulers}
 \section{Parte II - Extendiendo el simulador con nuevos schedulers}
 
 \subsection{Ejercicio 3}
+Ahora pasaremos a explicar algunos aspectos relevantes de la implementaci\'on que hicimos del shceduler
+$Round-Robin$, cuya idea b\'asica es asignar espacios de tiempo equitativos a cada proceso y ir pasando
+de uno a otro en forma circular, sin asignar ning\'un tipo de prioridad a ning\'un proceso. Una
+caracter\'istica interesante de este sistema de scheduling es que nos aseguramos de no tener el problema
+conocido como $starvation$. \\
+En la implementaci\'on, recibimos como par\'ametro la cantidad de n\'ucleos con la que vamos a trabajar
+y los valores de sus respectivos $quantums$. Utilizamos una \'unica cola global, para permitir as\'i la
+migraci\'on de proceso entre n\'ucleos. La clase SchedRR consta de una parte p\'ublica y una privada. En 
+la p\'ublica, se cuenta (al igual que en SchedLottery) con las funciones $load(pid)$, $unblock(pid)$ 
+y $tick(cpu, motivo)$. La funci\'on de load es la de notificar al scheduler que un nuevo proceso ha llegado.
+Cada vez que esto sucede, agregamos a la cola de procesos el pid del de dicho proceso. Unblock se encarga 
+de que en la pr\'oxima llamada a la funci\'on tick, el proceso pid est\'e disponible para ejecutar. Y 
+finalmente, tick se encarga de manejar, de acuerdo a qu\'e fue lo \'ultimo que hizo el proceso antes de llamar
+a dicha funci\'on y a la porci\'on del $quantum$ ya utilizado por el proceso, de encolar en la cola de procesos
+al proceso actual y pasar a correr el pr\'oximo proceso si ya se utiliz\'o todo el $quantum$, de pasar a correr 
+el pr\'oximo proceso y dejar fuera de la lista de procesos al proceso actual si dicho proceso ha finalizado, o de
+poner a correr el pr\'oximo proceso y encolar en la lista de procesos al proceso actual si dicho proceso se ha
+bloqueado por alguna raz\'on. \\
+Por otro lado, esta la parte privada de la clase SchedRR. Consta de algunas variables que utilizamos para efectuar
+correctamente el manejo de procesos seg\'un la pl\'itica del round-robin. Usamos un $vector<int> cores\_ticks$, 
+con el que llevamos la cuenta en todo momento de la cantidad de ticks que consumi\'o el proceso actual, 
+para cada n\'ucleo. Tambi\'en utilizamos un $vector<int> cores\_quantums$, en el cu\'al almacenamos los quantums
+de cada procesador que nos son pasados por par\'ametro. Otra estructura de datos importante es una
+$queue<int> process\_queue$, en la cu\'al almacenamos todos los procesos que est\'an esperando a ser ejecutados.
+En $cores_count$ guardamos la cantidad de n\'ucleos con la que vamos a trabajar. Finalmente, implementamos la
+funci\'on $run\_next(cpu)$, que devuelve el pid del pr\'oximo proceso de la cola a ejecutar. S\'olo la invocamos
+cuando es necesario pasar a ejecutar un nuevo proceso. Y lo que hacemos es sacar el primer proceso que est\'a 
+esperando en la cola de la misma y ponerlo a correr, al mismo tiempo que inicializamos la variable
+$cant\_ticks[pid]$ a cero (inicializamos el contador de ticks para el proceso actual en ejecuci\'on a cero). \\
+
 \subsection{Ejercicio 4}
 \subsection{Ejercicio 5}
 En este ejercicio, basados en el paper de Waldspurger, C.A. y Weihl en el cu\'al presentan un 
 novedoso sistema de Scheduling llamado $Lottery Scheduling$, implementamos una clase que llamamos
-SchedLottery que recibe como par\'ametros el quantum que se va a estar simulando y una semilla 
+SchedLottery que recibe como par\'ametros el quantum que se va simular y una semilla 
 pseudo-aleatoria, que el scheduler va a utilizar para el manejo de los procesos. Como dice en el
 enunciado, b\'asicamente nos interes\'o implementar la idea b\'asica del algoritmo y la 
-optimizaci\'on de tickets compensatorios. \\
-La clase SchedLottery tiene como parte p\'ublica las funciones $load(int pid)$, $unblock(int pid)$ 
-y $tick(cpu, Motivo)$. \\
-i) La funci\'on load la utilizamos para notificar al scheduler
-que un nuevo proceso ha llegado. Cada vez que llega un nuevo proceso le damos un ticket. \\
+optimizaci\'on de tickets compensatorios y en este caso, siempre trabajamos c\'olo con un n\'ucleo. \\
+La clase SchedLottery tiene como parte p\'ublica las funciones $load(pid)$, $unblock(pid)$ 
+y $tick(cpu, motivo)$. \\
+i) La funci\'on load(pid) la utilizamos para notificar al scheduler
+que un nuevo proceso ha llegado. Cada vez que llega un nuevo proceso le damos un ticket a dicho proceso.
+De esta forma, en el pr\'oximo sorteo el proceso ser\'a candidato a ganarlo y as\'i ser el pr\'oximo 
+en ser ejecutado. \\
 ii) La funci\'on
-$tick(cpu, motivo)$. El par\'ametro motivo puede significar que una de tres cosas
+tick(cpu, motivo). El par\'ametro motivo puede significar que una de tres cosas
 ocurrieron durante el \'ultimo ciclo del reloj: la tarea pid consumi\'o todo su
-ciclo utilizando el CPU (en cuyo caso incrementamos la cantidad de ticks y si esta cantidad supera el
-quantum, la desalojamos), la tarea ejecut\'o una llamada bloqueante o permaneci\'o 
+ciclo utilizando el CPU n\'umero $cpu$ (en cuyo caso incrementamos la cantidad de ticks y si esta cantidad supera el
+quantum de dicho procesador, la desalojamos), la tarea ejecut\'o una llamada bloqueante o permaneci\'o 
 bloqueada durante el \'ultimo ciclo (en cuyo caso proveemos al proceso bloqueado la compensaci\'on 
-de tickets correspondiente) \'o porque la tarea pid termin\'o (en cuyo caso desalojamos la tarea
+de tickets correspondiente bas\'andonos en el paper antes mencionado) \'o porque la tarea pid 
+termin\'o (en cuyo caso desalojamos la tarea
 actual). Despu\'es de hacer estos chequeos, corremos $run\_lottery$ que se encarga de efectuar el 
-sorteo de tickets para la pr\'oxima vez que se necesite elegir un proceso ganador para asignarle 
+sorteo de tickets para la pr\'oxima vez que se necesite elegir un proceso ganador y as\'i asignarle 
 los recursos necesarios. \\
 iii) La funci\'on unblock(pid) hace que en la pr\'oxima llamada a la funci\'on tick, el proceso pid 
 est\'e disponible para ejecutar. Lo que hacemos, es entregarle al proceso pid la cantidad de tickets
-que ten\'ia el proceso antes de ser bloqueado multiplicado por la compensaci\'on correspondiente. \\
+que ten\'ia el proceso antes de ser bloqueado multiplicado por la compensaci\'on correspondiente, que 
+depende de qu\'e fracci\'on del quantum dicho proceso hizo del CPU. \\
 Por otro lado, la clase SchedLottery tiene una parte privada, que consta de variables como $quantum$, 
 que usamos para saber el quantum que tiene disponible cada proceso para ejecutarse, $seed$, que
 usamos como semilla para elegir el ticket ganador cada vez que hagamos un sorteo, $vector<ticket>$, que
-usamos para saber qu\'e tickets corresponden a cada proceso, $totaltickets$ para tener r\'apido acceso
-a la cantidad de tickets que hay distribuidos entre los procesos y $ticketnumber$ que usamos para 
+usamos para saber qu\'e tickets corresponden a cada proceso, $total\_tickets$ para tener r\'apido acceso
+a la cantidad de tickets que hay distribuidos entre los procesos y $ticket\_number$ que usamos para 
 llevar la cuenta de cu\'antas veces llamamos a la funci\'on tick(cpu,motivo). Adem\'as, contamos con 
-las funciones privadas compensa(int), desaloja(int) y ticketsindex(int). La primera se encarga de
+las funciones privadas $compensa(pid)$, $desaloja(pid)$ y $tickets\_index(pid)$. La primera se encarga de
 calcular y asignar la compensaci\'on deseada a un proceso cuando corresponda; la segunda de que cuando
 se bloquea un proceso, no est\'e disponible para ejecutar en la pr\'oxima ejecuci\'on de la funci\'on
 tick(cpu,motivo). Es decir, que la probabilidad de ser elegible en el sorteo sobre los tickets sea cero.
