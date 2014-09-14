@@ -1,5 +1,7 @@
 export LC_ALL=C
-//CXX=g++-4.6
+ifeq ($(CXX),)
+	CC=g++-4.6
+endif
 CXXFLAGS= -Wall -pedantic -g -ggdb -std=c++0x
 LDFLAGS= -lpthread
 
