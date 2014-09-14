@@ -1,6 +1,6 @@
 export LC_ALL=C
-ifeq ($(CXX),)
-	CC=g++-4.6
+ifeq ($(strip $(CXX)),)
+	CXX=g++-4.6
 endif
 CXXFLAGS= -Wall -pedantic -g -ggdb -std=c++0x
 LDFLAGS= -lpthread

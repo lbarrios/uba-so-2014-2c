@@ -12,10 +12,13 @@ using namespace std;
  */
 struct Core
 {
-  int quantum = 0;
-  int ticks_count = 0;
-  vector<int> active_process = vector<int>();
-  queue<int> process_queue = queue<int>();
+  Core()
+  	: quantum(0), ticks_count(0), active_process(vector<int>()), process_queue(queue<int>())
+  { };
+  int quantum;
+  int ticks_count;
+  vector<int> active_process;
+  queue<int> process_queue;
   int runNextProcess( void )
   {
     int sig = this->process_queue.front();
