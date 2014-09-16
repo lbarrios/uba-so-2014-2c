@@ -280,37 +280,74 @@ en el cual se efectuó el tick y no en ninguno otro.
 \clearpage
 \subsection{Ejercicio 9}
 
-\begin{figure}[H]
-\centering
-\includegraphics[scale=0.66]{../experimentacion/ej9-fairness/tiempo_final/prueba-tiempo-final.png}
-\caption{Tiempo de ejecución de cuatro tareas idénticas}
-\end{figure}
+Se procedió a analizar la ecuanimidad o $fairness$ de nuestra implementación de $Lottery\ Scheduler$.
+
+Se eligieron cuatro procesos idénticos: $TaskCPU$ con 30 ticks de uso del procesador. Se lanzaron al mismo tiempo y se midió la cantidad de ticks que tomaron para finalizar la ejecución. Se esperaba que los cuatro procesos terminaran al mismo tiempo, si esperábamos un mecanismo de scheduling ecuánime.
+
+Sin embargo, al correr el simulador distintos procesos terminaron en tiempos con hasta un 40\% de diferencia. Dado el carácter pseudoaleatorio de la elección del proceso a ejecutar, dada una corrida en particular no está garantizada una asignación equitativa de los recursos. Se extendió el experimento y se llegó a dos conclusiones importantes.
+
+Primero, la ecuanimidad tiende a aumentar a medida que el tiempo aumenta. Se lanzaron 10 procesos idénticos al mismo tiempo, con un uso del CPU de 20 ticks, y un quantum de 4. Se fue midiendo, cada vez que se llama a \texttt{run\_lottery()} y se elige un proceso, la cantidad de ticks de procesador otorgados a cada proceso hasta el momento. Como medida de ecuanimidad se calculó la desviación estándar de estos valores.
+
+A continuación se presentan los resultados.
 
 \begin{figure}[H]
 \centering
-\includegraphics[scale=0.66]{../experimentacion/ej9-fairness/fairness/plot.png}
+\includegraphics[width=\textwidth]{../experimentacion/ej9-fairness/fairness/plot.png}
 \caption{Desvío estándar de la cantidad de ticks asignados a cada proceso}
 \end{figure}
+
+Al comienzo, cuando todas los procesos corrieron por cero ticks de reloj, la desviación estándar vale cero. Cuando se hacen los primeros sorteos de proceso a ejecutar, la desviación aumenta abruptamente. Sin embargo, luego de estabilizarse comienza a bajar de forma constante a medida que sucesivos sorteos emparejan los ticks asignados a cada proceso. La pronunciada caída final se debe a que algunos procesos terminaron y fueron desalojados, por lo que los procesos que quedan notan una \textit{inflación} en sus tickets, es decir, valen más ya que la cantidad de tickets en juego disminuye. La desviación estándar culmina en cero naturalmente ya que todos los procesos terminan con 20 ticks de CPU acumulados.
+
+Luego, se extendió el experimento inicial midiendo el tiempo de ejecución de los cuatro procesos, ahora promediado a través de varias corridas. El procedimiento utilizado fue calcular el promedio de las primeras 1, 2, ..., 500 corridas. Los resultados se pueden ver a continuación.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{../experimentacion/ej9-fairness/tiempo_final/prueba-tiempo-final.png}
+\caption{Tiempo de ejecución de cuatro procesos idénticos}
+\end{figure}
+
+
+Los tiempos de ejecución arrancan muy dispares. Primero se acercan hacia un valor intermedio de manera exponencial, luego van convergiendo lentamente hacia el mismo valor, en éste caso aproximadamente 112. Se puede concluir de forma fehaciente que a medida que la cantidad de corridas aumenta, la ecuanimidad del LotteryScheduler se acerca a la perfección.
 
 \clearpage
 \subsection{Ejercicio 10}
 
-\begin{figure}[H]
-\centering
-\includegraphics[scale=0.5]{../experimentacion/ej10-compensation/gant-sin.png}
-\caption{Diagrama de $gant$ con $compensation\ tickets$}
-\end{figure}
+Los $compensation\ tickets$ están diseñados para compensar un proceso que no llegó a completar su quantum al ser bloqueado, por ejemplo. Es un mecanismo sencillo de implementar en un $Lottery Scheduler$ pero que puede ser poco factible en otros schedulers. En la siguiente experimentación se puso a prueba que papel toma este mecanismo en garantizar la ecuanimidad del scheduling.
+
+Se planteó el siguiente escenario:
+\begin{itemize}
+    \item 5 procesos \texttt{TaskCPU(30)}
+    \item 5 procesos \texttt{TaskAlterno(0, 100, 30)} es decir, se bloquean por 100 ticks y luego usan el CPU por 30 ticks
+    \item quantum de 10 ticks
+    \item todos los procesos lanzados al mismo tiempo
+\end{itemize}
+
+El interrogante que se plantea es si los procesos que hacen las llamadas bloqueantes van a terminar su ejecución mucho después que los procesos que solo usan el CPU. Se corrió el experimento sin valerse de los $compensation\ tickets$ y luego haciendo uso de ellos.
 
 \begin{figure}[H]
 \centering
-\includegraphics[scale=0.5]{../experimentacion/ej10-compensation/gant-con.png}
-\caption{Diagrama de $gant$ sin $compensation\ tickets$}
+\includegraphics[width=\textwidth]{../experimentacion/ej10-compensation/gant-sin.png}
+\caption{Diagrama de Gantt sin $compensation\ tickets$}
 \end{figure}
+
+Como es de esperar, mientras los procesos de IO se bloquean, el resto es elegido con frecuencia y puede correr gran parte de sus 30 ticks de CPU. Cuando los procesos de IO se desbloquean, el tiempo de CPU se divide equitativamente entre todos, pero, como los procesos de CPU ya habían corrido bastante tiempo previamente, terminan antes.
 
 \begin{figure}[H]
 \centering
-\includegraphics[scale=0.66]{../experimentacion/ej10-compensation/plot-comparativa.png}
+\includegraphics[width=\textwidth]{../experimentacion/ej10-compensation/gant-con.png}
+\caption{Diagrama de Gantt con $compensation\ tickets$}
+\end{figure}
+
+En este caso la ejecución comienza igual. Sin embargo, al desbloquearse los procesos de IO, se puede percibir otra tendencia. Como para realizar la llamada bloqueante utilizaron solo un tick de procesador, $1/10$ del quantum asignado, se les entregan 10 tickets en vez de 1. En la siguiente ronda de loterías, estos procesos ejecutan casi como si estuvieran solos. Tienen $5/55$ tickets cada uno contra $1/55$ de los procesos de CPU. Al salir seleccionados, vuelven a tener 1 ticket cada uno y el resultado del lottery se empareja. Como consecuencia los procesos terminan más cerca unos de otros.
+
+Este resultado se puede cuantificar en el siguiente gráfico.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{../experimentacion/ej10-compensation/plot-comparativa.png}
 \caption{Comparación de $fairness$ con y sin $compensation\ tickets$}
 \end{figure}
+
+La evolución del desvió estándar comienza igual, hasta el tick 120 donde se liberan los procesos bloqueados. A partir de ese momento la corrida con $compensation\ tickets$ presenta una desviación observablemente menor. Lo que se concluye es que los $compensation\ tickets$ son un mecanismo que se puede implementar fácilmente en el $Lottery Scheduler$, que no implican un $overload$ excesivo en el scheduling y que permiten aumentar corroboradamente la ecuanimidad en la asignación de recursos.
 
 \end{document}
