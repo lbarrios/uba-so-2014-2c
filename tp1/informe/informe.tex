@@ -140,6 +140,17 @@ que es lo que nosotros esper\'abamos. Esto nos da la pauta de que m\'as procesad
 mucha m\'as eficiencia y velocidad: hay otros factores que son m\'as importantes, como el algoritmo de
 scheduling utilizado, y la consideraci\'on de las caracter\'isticas del lote de tareas que voy a querer
 correr. \\
+A continuaci\'on, presentamos los diagramas de Gantt de los cuales hablamos: \\
+
+\includegraphics [width=17cm]{../graficos/sched_fcfs/cpu_intensivo.png} {Fig. 2.1}
+\includegraphics [width=17cm]{../graficos/sched_fcfs/cpu_intensivo2.png} {Fig. 2.2}
+\includegraphics [width=17cm]{../graficos/sched_fcfs/cpu_intensivo3.png} {Fig. 2.3}
+\includegraphics [width=17cm]{../graficos/sched_fcfs/interactivo.png} {Fig. 2.4}
+\includegraphics [width=17cm]{../graficos/sched_fcfs/interactivo_2.png} {Fig. 2.5}
+\includegraphics [width=17cm]{../graficos/sched_fcfs/interactivo_3.png} {Fig. 2.6}
+\includegraphics [width=17cm]{../graficos/sched_fcfs/interactivo2.png} {Fig. 2.7}
+\includegraphics [width=17cm]{../graficos/sched_fcfs/interactivo2_2.png} {Fig. 2.8}
+\includegraphics [width=17cm]{../graficos/sched_fcfs/interactivo2_3.png} {Fig. 2.9}
 
 
 \newpage
@@ -232,6 +243,35 @@ Para eso, lo que hicimos fue sacarle todos los tickets temporalmente a dicho pro
 \subsection{Ejercicio 7}
 \newpage
 \subsection{Ejercicio 8}
+En esta secci\'on implementamos una segunda versi\'on para el scheduler tipo $Round-Robin$ que ya implementamos
+en ejercicios anteriores. En este caso, el objetivo es no permitir la migraci\'on de procesos entre n\'ucleos y
+analizar qu\'e sucede con la performance de este scheduler en comparaci\'on con el original para distintos lotes
+de tareas. En principio, esperar\'iamos que en algunos tipos de lotes un algoritmo ande mejor que el otro
+Esto es porque, por ejemplo, pensamos que si tenemos un 
+\'unico proceso que tarda mucho en completarse y no permitimos migraci\'on entre procesos, usando el m\'etodo 
+alternativo empeorar\'iamos la performance mientras que usando el otro m\'etodo, el tiempo total que se tardar\'ia
+en finalizar el proceso se reducir\'ia a la mitad. Sin embargo, si aparte de dicho proceso largo tuvi\'eramos un
+segundo proceso igual de largo, la implementaci\'on m\'as eficiente ser\'ia la que no permite migraci\'on entre 
+n\'ucleos (as\'i nos ahorrar\'iamos de perder tiempo en cambios de contexto). Finalmente, en principio creemos que
+si hubieran muchos m\'as procesos que n\'ucleos y de longitud similar, 
+y no se permitiera la migraci\'on de procesos entre n\'ucleos, los tiempos de finalizaci\'on de distintos 
+procesos ser\'ian muy dispares. Algo que, en principio es indeseable pues podr\'ia suceder que si a un proceso muy 
+corto le toca justo el mismo core que a un proceso muy largo, este deber\'ia esperar mucho tiempo a que el largo
+termine hasta que el procesador lo atienda. \\
+En nuestra implementaci\'on del la clase $SchedRR2$ para implementar las mismas tres funciones b\'asicas que venimos
+implementando en los anteriores schedulers (tick, unblock, load), utilizamos en la parte privada de la clase tres
+estructuras para el manejo de los procesos: estas son un $vector<core>$, que contiene mucha de la informaci\'on 
+que ten\'iamos en la implementaci\'on del $SchedRR$(en efecto, tenemos almacenado el quantum del core, la cantidad de
+ticks actual, un vector de entero que lleva cuenta de los procesos activos en dicho core, una cola de esos procesos para
+saber en qu\'e orden ir ejecut\'andolos, y una funci\'on runNextProcess() que se encarga de sacar de la cola al
+primer proceso y ponerlo a correr), pero en este caso efectuamos una distinci\'on entre qu\'e procesos est\'an en cada
+n\'ucleo (antes, no nos importaba hacer esta distinci\'on, porque como hab\'ia migraci\'on de procesos entre 
+n\'ucleos, no nos importaba en qu\'e n\'ucleo estaba cada proceso). \\
+Hacemos uso de esta estructura a trav\'es de la funci\'on $getProcessCores(pid)$, que para 
+el proceso pid nos devuelve un puntero al n\'ucleo en el cu\'al est\'a presente. Entonces, ahora
+en cada tick del reloj de cada cpu, si el motivo es de bloqueo o terminaci\'on, entonces pasamos a correr en ese mismo
+cpu al pr\'oximo proceso. Mientras que si llega un nuevo proceso, lo agregamos a la cola de procesos del cpu
+en el cual se efectu\'o el tick y no en ninguno otro. \\
 \newpage
 \subsection{Ejercicio 9}
 
