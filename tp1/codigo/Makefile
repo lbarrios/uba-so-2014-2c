@@ -34,12 +34,18 @@ new: clean all
 RR_TEMP_TXT=sched_rr_out_temp.txt
 RR_TEMP_DBG=sched_rr_dbg_temp.txt
 RR_TEMP_PNG=sched_rr_out_temp.png
+ifeq ($(strip $(CORES)),)
+	CORES=2
+endif
+ifeq ($(strip $(SCHED_PARAM)),)
+	SCHED_PARAM=2 2
+endif
 ifeq ($(strip $(TASK_FILE)),)
 	TASK_FILE=tasks/sched_rr/tareas.tsk
 endif
 runRR: all
 	clear && \
-	./simusched $(TASK_FILE) 2 1 1 SchedRR 2 2 2> $(RR_TEMP_DBG) > $(RR_TEMP_TXT) && \
+	./simusched $(TASK_FILE) $(CORES) 1 1 SchedRR $(SCHED_PARAM) 2> $(RR_TEMP_DBG) > $(RR_TEMP_TXT) && \
 	cat $(RR_TEMP_DBG) && \
 	python graphsched.py < $(RR_TEMP_TXT) > $(RR_TEMP_PNG) && xdg-open $(RR_TEMP_PNG) &
 
