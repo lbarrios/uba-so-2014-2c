@@ -277,17 +277,33 @@ en el cual se efectu\'o el tick y no en ninguno otro. \\
 \newpage
 \subsection{Ejercicio 9}
 
-\begin{figure}[H]
-\centering
-\includegraphics[scale=0.66]{../experimentacion/ej9-fairness/tiempo_final/prueba-tiempo-final.png}
-\caption{Tiempo de ejecución de cuatro tareas idénticas}
-\end{figure}
+Se procedió a analizar la ecuanimidad o $fairness$ de nuestra implementación de $Lottery\ Scheduler$.
+
+Se eligieron cuatro procesos idénticos: $TaskCPU$ con 30 ticks de uso del procesador. Se lanzaron al mismo tiempo y se midió la cantidad de ticks que tomaron para finalizar la ejecución. Se esperaba que los cuatro procesos terminaran al mismo tiempo, si esperábamos un mecanismo de scheduling ecuánime.
+
+Sin embargo, al correr el simulador distintos procesos terminaron en tiempos con hasta un 40\% de diferencia. Dado el carácter pseudoaleatorio de la elección del proceso a ejecutar, dada una corrida en particular no está garantizada una asignación equitativa de los recursos. Se extendió el experimento y se llegó a dos conclusiones importantes.
+
+Primero, la ecuanimidad tiende a aumentar a medida que el tiempo aumenta. Se lanzaron 10 procesos idénticos al mismo tiempo, con un uso del CPU de 20 ticks, y un quantum de 4. Se fue midiendo, cada vez que se llama a \texttt{run\_lottery()} y se elige un proceso, la cantidad de ticks de procesador otorgados a cada proceso hasta el momento. Como medida de ecuanimidad se calculó la desviación estándar de estos valores.
+
+A continuación se presentan los resultados.
 
 \begin{figure}[H]
 \centering
 \includegraphics[scale=0.66]{../experimentacion/ej9-fairness/fairness/plot.png}
 \caption{Desvío estándar de la cantidad de ticks asignados a cada proceso}
 \end{figure}
+
+Al comienzo, cuando todas los procesos corrieron por cero ticks de reloj, la desviación estándar vale cero. Cuando se hacen los primeros sorteos de proceso a ejecutar, la desviación aumenta abruptamente. Sin embargo, luego de estabilizarse comienza a bajar de forma constante a medida que sucesivos sorteos emparejan los ticks asignados a cada proceso. La pronunciada caída final se debe a que algunos procesos terminaron y fueron desalojados, por lo que los procesos que quedan notan una \textit{inflación} en sus tickets, es decir, valen más ya que la cantidad de tickets en juego disminuye. La desviación estándar culmina en cero naturalmente ya que todos los procesos terminan con 20 ticks de CPU acumulados.
+
+Luego, se extendió el experimento inicial midiendo el tiempo de ejecución de los cuatro procesos, ahora promediado a través de varias corridas. El procedimiento utilizado fue calcular el promedio de las primeras 1, 2, ..., 500 corridas. Los resultados se pueden ver a continuación.
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.66]{../experimentacion/ej9-fairness/tiempo_final/prueba-tiempo-final.png}
+\caption{Tiempo de ejecución de cuatro procesos idénticos}
+\end{figure}
+
+Los tiempos de ejecución arrancan muy dispares. Primero se acercan hacia un valor intermedio de manera exponencial, luego van convergiendo lentamente hacia el mismo valor, en éste caso aproximadamente 112. Se puede concluir de forma fehaciente que a medida que la cantidad de corridas aumenta, la ecuanimidad del LotteryScheduler se acerca a la perfección.
 
 \newpage
 \subsection{Ejercicio 10}
