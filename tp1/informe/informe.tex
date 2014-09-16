@@ -90,7 +90,7 @@ en la actualidad por distintos sistemas operativos para manejar correcta y efici
 diversos procesos que se ejecutan concurrentemente en m\'aquinas con uno o m\'as procesadores. \\
 Intentaremos detectar las ventajas y desventajas de cada m\'etodo, as\'i como los escenarios en los
 cuales uno puede ser m\'as eficiente que otro. Para esto, dividimos el TP en tres partes: en la
-primera, presentamos el simulador simusched y lo corremos para algunas tareas espec\'ificas. En la
+primera, presentamos el simulador \texttt{simusched} y lo corremos para algunas tareas espec\'ificas. En la
 segunda parte, extendemos el simulador con nuevos schedulers implementados por nosotros y finalmente,
 en la tercera parte evaluamos y analizamos los distintos algoritmos de scheduling ya presentados. \\
 \end{abstract}
@@ -103,19 +103,19 @@ en la tercera parte evaluamos y analizamos los distintos algoritmos de schedulin
 En este ejercicio, programamos la tarea TaskConsola, que simular\'ia una tarea interactiva con
 el usuario. \\
 Para la implementaci\'on de esta tarea, primero tuvimos que registrarla para que el simulador la 
-reconozca en el archivo tasks.cpp, con la funci\'on tasksinit(void). En ese mismo archivo implementamos
-la tarea, que para el proceso n\'umero pid recibe los tres par\'ametros: n, bmin y bmax. Simplemente
+reconozca en el archivo \texttt{tasks.cpp}, con la funci\'on \texttt{tasksinit(void)}. En ese mismo archivo implementamos
+la tarea, que para el proceso n\'umero $pid$ recibe los tres par\'ametros: $n$, $bmin$ y $bmax$. Simplemente
 hacemos un ciclo que cicle n veces y que cada vez tome un entero al azar $r$ entre $bmin$ y 
-$bmax$, y cada vez llamamos a la funci\'on usoIO(pid, r), que simula hacer uso de dispositivos de
+$bmax$, y cada vez llamamos a la funci\'on \texttt{usoIO(pid, r)}, que simula hacer uso de dispositivos de
 entrada/salida. \\
 Nota(1): se denomina llamada bloqueante a aquellas llamadas en las que, si lo que esta  
 solicita no est\'a disponible, entonces el proceso llamador se queda bloqueado a la espera de un
-resultado. Es decir, no permite que otros procesos dependientes de este sigan ejecutando. Por 
+resultado. Es decir, no permite que otros procesos dependientes de éste sigan ejecutando. Por 
 el contrario, en una llamada no bloqueante, si el proceso llamador no encuentra lo que estaba
 buscando, el proceso devuelve de todas formas alg\'un resultado, permitiendo que otros procesos
 sigan ejecutando sin tener que esperar a que este proceso llamador reciba el resultado que est\'a
 esperando. \\
-Nota(2): para elegir el n\'umero pseudo-aleatorio hacemos uso de la funci\'on rand() provista
+Nota(2): para elegir el n\'umero pseudo-aleatorio hacemos uso de la funci\'on \texttt{rand()} provista
 por la librer\'a standard de C. \\
 
 \newpage
