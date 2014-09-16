@@ -1,0 +1,13 @@
+basesched.o
+basetask.o
+main.o
+sched_fcfs.o
+sched_lottery.o
+sched_rr.o
+sched_rr2.o
+sched_rr_dbg_temp.txt
+sched_rr_out_temp.png
+sched_rr_out_temp.txt
+simu.o
+simusched
+tasks.o

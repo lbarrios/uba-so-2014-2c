@@ -37,9 +37,9 @@ RR_TEMP_PNG=sched_rr_out_temp.png
 TASK_FILE=tasks/sched_rr/tareas.tsk
 runRR: all
 	clear && \
-	./simusched $(TASK_FILE) 2 1 1 SchedRR 2 5 2> $(RR_TEMP_DBG) > $(RR_TEMP_TXT) && \
+	./simusched $(TASK_FILE) 2 1 1 SchedRR 2 2 2> $(RR_TEMP_DBG) > $(RR_TEMP_TXT) && \
 	cat $(RR_TEMP_DBG) && \
-	python graphsched.py < $(RR_TEMP_TXT) > $(RR_TEMP_PNG) && xdg-open $(RR_TEMP_PNG)
+	python graphsched.py < $(RR_TEMP_TXT) > $(RR_TEMP_PNG) && xdg-open $(RR_TEMP_PNG) &
 
 cleanRR:
 	rm -f $(RR_TEMP_TXT) $(RR_TEMP_PNG) $(RR_TEMP_DBG)
