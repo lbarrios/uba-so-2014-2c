@@ -1,0 +1,1 @@
+./simusched prueba.tsk 1 1 1 SchedLottery 10 17 2> ticks-sin.csv | python graphsched.py > gant.png && abri gant.png
