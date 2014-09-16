@@ -82,39 +82,39 @@ A continuación, presentamos los diagramas de Gantt de los cuales hablamos:
 
 \begin{figure}[H]
   \includegraphics [width=\textwidth]{../graficos/sched_fcfs/cpu_intensivo.png}
-  \caption{}
+  \caption{Intensivas en CPU}
 \end{figure}
 \begin{figure}[H]
   \includegraphics [width=\textwidth]{../graficos/sched_fcfs/cpu_intensivo2.png}
-  \caption{}
+  \caption{Intensivas en CPU}
 \end{figure}
 \begin{figure}[H]
   \includegraphics [width=\textwidth]{../graficos/sched_fcfs/cpu_intensivo3.png}
-  \caption{}
+  \caption{Intensivas en CPU}
 \end{figure}
 \begin{figure}[H]
   \includegraphics [width=\textwidth]{../graficos/sched_fcfs/interactivo.png}
-  \caption{}
+  \caption{Interactivas}
 \end{figure}
 \begin{figure}[H]
   \includegraphics [width=\textwidth]{../graficos/sched_fcfs/interactivo_2.png}
-  \caption{}
+  \caption{Interactivas}
 \end{figure}
 \begin{figure}[H]
   \includegraphics [width=\textwidth]{../graficos/sched_fcfs/interactivo_3.png}
-  \caption{}
+  \caption{Interactivas}
 \end{figure}
 \begin{figure}[H]
   \includegraphics [width=\textwidth]{../graficos/sched_fcfs/interactivo2.png}
-  \caption{}
+  \caption{Interactivas (2)}
 \end{figure}
 \begin{figure}[H]
   \includegraphics [width=\textwidth]{../graficos/sched_fcfs/interactivo2_2.png}
-  \caption{}
+  \caption{Interactivas (2)}
 \end{figure}
 \begin{figure}[H]
   \includegraphics [width=\textwidth]{../graficos/sched_fcfs/interactivo2_3.png}
-  \caption{}
+  \caption{Interactivas (2)}
 \end{figure}
 
 \clearpage
@@ -161,28 +161,170 @@ esperando en la cola de la misma y ponerlo a correr, al mismo tiempo que inicial
 $cant\_ticks[pid]$ a cero (inicializamos el contador de ticks para el proceso actual en ejecución a cero). 
 
 
+
+
+
+
+
+
+
 \clearpage
 \subsection{Ejercicio 4}
 
-Para este ejercicio se pide diseñar lotes de tareas, y luego simularlos mediante el Scheduler
-\texttt{SchedRR} implementado en el \textbf{punto 3}. Se diseñó un lote de tareas simples,
+Para este ejercicio se pide diseñar lotes de tareas, y luego simularlos mediante
+el Scheduler \texttt{SchedRR} implementado en el \textbf{punto 3}. Se diseñó un
+lote de \textbf{tareas  simples}\footnote{Solo usan CPU.}, y tres lotes
+conteniendo \textbf{tareas simples} y  \textbf{tareas interactivas} con
+distintos criterios de orden. Se corrió el  experimento con \texttt{1 CPU}, y
+con \texttt{2 CPU}, con un \emph{Quantum} de 2.
 
-\begin{minipage}{5cm}
-\begin{Verbatim}[frame=single,framesep=1cm,label=task\_sched\_rr.tsk]
+\begin{minipage}[t]{0.4\textwidth}
+\begin{Verbatim}[frame=single,framesep=1cm,label=simples.tsk]
 *10 TaskCPU 5  
 \end{Verbatim}
 \end{minipage}
+\hfill
+\begin{minipage}[t]{0.4\textwidth}
+\begin{Verbatim}[frame=single,framesep=1cm,label=interactivas.tsk]
+*6 TaskCPU 6
+*6 TaskConsola 6 1 12
+\end{Verbatim}
+\end{minipage}
 
-las cuales comienzan todas al mismo tiempo, y corren con los mismos parámetros, de forma tal que 
-permiten visualizar rápidamente el comportamiento característico del \textbf{Round Robin}, tal y como
-se puede apreciar en \fig{gantt-sched-rr}.
+\begin{minipage}{0.4\textwidth}
+\begin{Verbatim}[frame=single,framesep=1cm,label=interactivas2.tsk]
+*6 TaskConsola 6 1 12
+*6 TaskCPU 6
+\end{Verbatim}
+\end{minipage}
+\hfill
+\begin{minipage}{0.4\textwidth}
+\begin{Verbatim}[frame=single,framesep=1cm,label=interactivas\_intercaladas.tsk]
+TaskCPU 6
+TaskConsola 6 1 12
+TaskCPU 6
+TaskConsola 6 1 12
+TaskCPU 6
+TaskConsola 6 1 12
+TaskCPU 6
+TaskConsola 6 1 12
+TaskCPU 6
+TaskConsola 6 1 12
+\end{Verbatim}
+\end{minipage}
 
-\begin{figure}[H]
+En el lote de \textbf{tareas simples}, estas comienzan al mismo tiempo, y  son
+ejecutadas con los mismos parámetros, de forma tal que tanto en la simulación
+con \texttt{1 core} como en la de \texttt{2 cores} es fácil visualizar el
+comportamiento característico del \textbf{Round Robin}. Esto se puede apreciar
+en \fig{gantt-sched-rr-1} y \fig{gantt-sched-rr-2}, de uno y dos \textbf{cores}
+respectivamente.  En ambas versiones se puede notar que en ningún momento hay un
+``desperdicio'' de CPU, pero dado que no hay llamadas bloqueantes esto es de
+esperarse. Por la misma razón, también es más notorio el orden en que son
+llamadas las tareas, ya que como estas jamás se bloquean, siempre están
+disponibles apenas terminan su \emph{Quantum}. En la versión de \textbf{2 cores}
+se puede observar, además, que no se realiza migración de procesos entre
+núcleos, ya que el número de tareas es par. Si el número de tareas fuera impar,
+esto obligaría a todas las tareas a migrar de núcleo.
+
+\begin{figure}
   \centering
-  \includegraphics [width=\textwidth]{../graficos/sched_rr/output1.png}
-  \caption{Diagrama Gantt de SchedRR}
-  \label{fig:gantt-sched-rr}
+  \includegraphics [width=\textwidth]{../graficos/sched_rr/simples-1.png}
+  \caption{\emph{Diagrama Gantt} de \texttt{SchedRR} para tareas simples \textbf{(1 core)}}
+  \label{fig:gantt-sched-rr-1}
 \end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics [width=\textwidth]{../graficos/sched_rr/simples-2.png}
+  \caption{\emph{Diagrama Gantt} de \texttt{SchedRR} para tareas simples \textbf{(2 cores)}}
+  \label{fig:gantt-sched-rr-2}
+\end{figure}
+
+Los lotes de \textbf{tareas interactivas} producen resultados más interesantes.
+Para probar las diferentes opciones se varió el orden de las tareas. En \fig
+{gantt-sched-rr-interactivas1-1} y \fig{gantt-sched-rr-interactivas1-2} se
+pueden observar los diagramas correspondientes a las versiones de 1 core y 2
+cores, para los lotes en donde se encolan primero las \textbf{6 tareas simples},
+y luego las \textbf{6 tareas interactivas}. En la versión de \textbf{1 core},
+vemos que no hay \emph{desperdicio de CPU}. Sin embargo, en la versión de
+\textbf{2 cores}, se puede observar que la \textbf{tarea IDLE} corre varias
+veces, durante una cantidad considerable de ciclos, luego de que todas las
+\textbf{tareas simples} ya terminaron su ejecución. Esto coincide con los
+momentos en que todas las \textbf{tareas interactivas} se encuentran
+\emph{bloqueadas}. También podemos notar que, aunque en la segunda versión el
+número de cores es el doble, el tiempo de ejecución total de todas las tareas no
+es la mitad que para la primera versión.
+
+En \fig{gantt-sched-rr-interactivas2-1} y \fig{gantt-sched-rr-interactivas2-2}
+se pueden observar los diagramas correspondientes a las versiones de 1 core y 2
+cores, para los lotes en donde se encolan primero las \textbf{6 tareas
+interactivas}, y luego las \textbf{6 tareas simples}. Pese al cambio de orden,
+se sigue notando el mismo tipo de patrón, característico de una planificación
+por \textbf{Round Robin}. En la versión de \textbf{2 cores} se nota una leve
+mejoría con respecto a la versión de \fig{gantt-sched-rr-interactivas1-2}, a
+causa de un mejor aprovechamiento de la CPU: como las \textbf{tareas
+interactivas} fueron encoladas primero, se le está dando una pequeña
+``ventaja/prioridad'' frente a las \textbf{tareas simples}. Esto permite que
+cuando las primeras se bloquean, las segundas \emph{aprovechen el tiempo de
+CPU} libre, evitando delegárselo a la \textbf{tarea IDLE}.
+
+Finalmente, en \fig{gantt-sched-rr-interactivas-interrcaladas-1} y  
+\fig{gantt-sched-rr-interactivas-interrcaladas-2} también se puede apreciar 
+fácilmente el comportamiento de la \emph{planificación Round Robin}. Las tareas
+se encuentran intercaladas, buscando así forzar una distribución más equitativa
+entre las \textbf{tareas interactivas} y las \textbf{tareas no interactivas}. En
+la versión de \textbf{1 core}, se puede notar rápidamente cómo el orden inicial
+se va perdiendo, relegando la ejecución de las \textbf{tareas bloqueantes}. Esto
+último se observa todavía más acentuado en la versión de \textbf{2 cores}, en
+donde además hay una alta tasa de migración de CPU. A pesar de ello, las
+\textbf{tareas no interactivas} tienen un tiempo total de ejecución levemente
+superior a \fig{gantt-sched-rr-interactivas1-2}, en donde estas son puestas al
+principio de la cola.
+
+\begin{figure}
+  \centering
+  \includegraphics [width=\textwidth]{../graficos/sched_rr/interactivas1-1.png}
+  \caption{\emph{Diagrama Gantt} de \texttt{SchedRR} para tareas simples, luego interactivas \textbf{(1 core)}}
+  \label{fig:gantt-sched-rr-interactivas1-1}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics [width=\textwidth]{../graficos/sched_rr/interactivas1-2.png}
+  \caption{\emph{Diagrama Gantt} de \texttt{SchedRR} para tareas simples, luego interactivas \textbf{(2 cores)}}
+  \label{fig:gantt-sched-rr-interactivas1-2}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics [width=\textwidth]{../graficos/sched_rr/interactivas2-1.png}
+  \caption{\emph{Diagrama Gantt} de \texttt{SchedRR} para tareas interactivas, luego simples \textbf{(1 core)}}
+  \label{fig:gantt-sched-rr-interactivas2-1}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics [width=\textwidth]{../graficos/sched_rr/interactivas2-2.png}
+  \caption{\emph{Diagrama Gantt} de \texttt{SchedRR} para tareas interactivas, luego simples \textbf{(2 cores)}}
+  \label{fig:gantt-sched-rr-interactivas2-2}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics [width=\textwidth]{../graficos/sched_rr/interactivas-intercaladas-1.png}
+  \caption{\emph{Diagrama Gantt} de \texttt{SchedRR} para tareas simples e interactivas, intercaladas \textbf{(1 core)}}
+  \label{fig:gantt-sched-rr-interactivas-interrcaladas-1}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics [width=\textwidth]{../graficos/sched_rr/interactivas-intercaladas-2.png}
+  \caption{\emph{Diagrama Gantt} de \texttt{SchedRR} para tareas simples e interactivas, intercaladas \textbf{(2 cores)}}
+  \label{fig:gantt-sched-rr-interactivas-interrcaladas-2}
+\end{figure}
+
+
 
 \clearpage
 \subsection{Ejercicio 5}
@@ -231,18 +373,39 @@ tick(cpu,motivo). Es decir, que la probabilidad de ser elegible en el sorteo sob
 Para eso, lo que hicimos fue sacarle todos los tickets temporalmente a dicho proceso. 
 
 
+
+
+
+
 \clearpage
 \index{Evaluando los algoritmos de scheduling}
 \section{Evaluando los algoritmos de scheduling}
 \setcounter{subsection}{5}
+
+
+
+
+
 
 \subsection{Ejercicio 6}
 
 Se registró un nuevo tipo de tarea, \texttt{TaskBatch(total\_cpu, cant\_bloqueos)}. Hace uso del CPU $total\_cpu$ ticks de reloj en total, entre los cuáles hace $cant\_bloqueos$ llamadas bloqueantes, distribuidas de manera uniforme y de duración un tick de reloj.
 La implementación requirió elegir $cant\_bloqueos$ momentos entre 1 y $total\_cpu$. Para eso se guardó un arreglo de booleanos que mantiene que momentos ya fueron elegidos. Entonces se fueron generando momentos de manera pseudo\-aleatoria hasta elegir $cant\_bloqueos$ momentos \textit{distintos} para hacer llamadas bloqueantes. En el resto del tiempo, la tarea usa el procesador.
 
+
+
+
+
+
+
 \clearpage
 \subsection{Ejercicio 7}
+
+
+
+
+
+
 \clearpage
 \subsection{Ejercicio 8}
 En esta sección implementamos una segunda versión para el scheduler tipo $Round-Robin$ que ya implementamos
@@ -277,6 +440,11 @@ en cada tick del reloj de cada cpu, si el motivo es de bloqueo o terminación, e
 cpu al próximo proceso. Mientras que si llega un nuevo proceso, lo agregamos a la cola de procesos del cpu
 en el cual se efectuó el tick y no en ninguno otro. 
 
+
+
+
+
+
 \clearpage
 \subsection{Ejercicio 9}
 
@@ -308,6 +476,13 @@ Luego, se extendió el experimento inicial midiendo el tiempo de ejecución de l
 
 
 Los tiempos de ejecución arrancan muy dispares. Primero se acercan hacia un valor intermedio de manera exponencial, luego van convergiendo lentamente hacia el mismo valor, en éste caso aproximadamente 112. Se puede concluir de forma fehaciente que a medida que la cantidad de corridas aumenta, la ecuanimidad del LotteryScheduler se acerca a la perfección.
+
+
+
+
+
+
+
 
 \clearpage
 \subsection{Ejercicio 10}
@@ -348,6 +523,6 @@ Este resultado se puede cuantificar en el siguiente gráfico.
 \caption{Comparación de $fairness$ con y sin $compensation\ tickets$}
 \end{figure}
 
-La evolución del desvió estándar comienza igual, hasta el tick 120 donde se liberan los procesos bloqueados. A partir de ese momento la corrida con $compensation\ tickets$ presenta una desviación observablemente menor. Lo que se concluye es que los $compensation\ tickets$ son un mecanismo que se puede implementar fácilmente en el $Lottery Scheduler$, que no implican un $overload$ excesivo en el scheduling y que permiten aumentar corroboradamente la ecuanimidad en la asignación de recursos.
+La evolución del desvio estándar comienza igual, hasta el tick 120 donde se liberan los procesos bloqueados. A partir de ese momento la corrida con $compensation\ tickets$ presenta una desviación observablemente menor. Lo que se concluye es que los $compensation\ tickets$ son un mecanismo que se puede implementar fácilmente en el $Lottery Scheduler$, que no implican un $overload$ excesivo en el scheduling y que permiten aumentar corroboradamente la ecuanimidad en la asignación de recursos.
 
 \end{document}
