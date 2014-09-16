@@ -3,6 +3,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath}
 \usepackage{graphicx}
+\usepackage{float}
 %\usepackage[colorinlistoftodos]{todonotes}
 
 \usepackage{multicol}
@@ -94,6 +95,7 @@ segunda parte, extendemos el simulador con nuevos schedulers implementados por n
 en la tercera parte evaluamos y analizamos los distintos algoritmos de scheduling ya presentados. \\
 \end{abstract}
 
+\newpage
 \index{Parte I - Entendiendo el simulador simusched}
 \section{Parte I - Entendiendo el simulador simusched}
 
@@ -116,6 +118,7 @@ esperando. \\
 Nota(2): para elegir el n\'umero pseudo-aleatorio hacemos uso de la funci\'on rand() provista
 por la librer\'a standard de C. \\
 
+\newpage
 \subsection{Ejercicio 2}
 Para seguir entendiendo el funcionamiento del simulador simusched, ahora pasamos a escribir un lote
 de 3 tareas distintas: una intensiva en CPU y las otras dos de tipo interactivo. Vamos a ejecutar y
@@ -139,6 +142,7 @@ scheduling utilizado, y la consideraci\'on de las caracter\'isticas del lote de 
 correr. \\
 
 
+\newpage
 \index{Parte II - Extendiendo el simulador con nuevos schedulers}
 \section{Parte II - Extendiendo el simulador con nuevos schedulers}
 
@@ -173,7 +177,10 @@ cuando es necesario pasar a ejecutar un nuevo proceso. Y lo que hacemos es sacar
 esperando en la cola de la misma y ponerlo a correr, al mismo tiempo que inicializamos la variable
 $cant\_ticks[pid]$ a cero (inicializamos el contador de ticks para el proceso actual en ejecuci\'on a cero). \\
 
+\newpage
 \subsection{Ejercicio 4}
+
+\newpage
 \subsection{Ejercicio 5}
 En este ejercicio, basados en el paper de Waldspurger, C.A. y Weihl en el cu\'al presentan un 
 novedoso sistema de Scheduling llamado $Lottery Scheduling$, implementamos una clase que llamamos
@@ -217,26 +224,48 @@ Para eso, lo que hicimos fue sacarle todos los tickets temporalmente a dicho pro
 
 
 
+\newpage
 \index{Parte III - Evaluando los algoritmos de scheduling}
 \section{Parte III - Evaluando los algoritmos de scheduling}
 
 \subsection{Ejercicio 6}
 \subsection{Ejercicio 7}
+\newpage
 \subsection{Ejercicio 8}
+\newpage
 \subsection{Ejercicio 9}
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.66]{../experimentacion/ej9-fairness/tiempo_final/prueba-tiempo-final.png}
+\caption{Tiempo de ejecución de cuatro tareas idénticas}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.66]{../experimentacion/ej9-fairness/fairness/plot.png}
+\caption{Desvío estándar de la cantidad de ticks asignados a cada proceso}
+\end{figure}
+
+\newpage
 \subsection{Ejercicio 10}
 
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.5]{../experimentacion/ej10-compensation/gant-sin.png}
+\caption{Diagrama de $gant$ con $compensation\ tickets$}
+\end{figure}
 
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.5]{../experimentacion/ej10-compensation/gant-con.png}
+\caption{Diagrama de $gant$ sin $compensation\ tickets$}
+\end{figure}
 
-
-
-
-
-
-
-
-
-
-
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.66]{../experimentacion/ej10-compensation/plot-comparativa.png}
+\caption{Comparación de $fairness$ con y sin $compensation\ tickets$}
+\end{figure}
 
 \end{document}
