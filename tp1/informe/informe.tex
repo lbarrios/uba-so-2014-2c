@@ -90,7 +90,7 @@ en la actualidad por distintos sistemas operativos para manejar correcta y efici
 diversos procesos que se ejecutan concurrentemente en m\'aquinas con uno o m\'as procesadores. \\
 Intentaremos detectar las ventajas y desventajas de cada m\'etodo, as\'i como los escenarios en los
 cuales uno puede ser m\'as eficiente que otro. Para esto, dividimos el TP en tres partes: en la
-primera, presentamos el simulador simusched y lo corremos para algunas tareas espec\'ificas. En la
+primera, presentamos el simulador \texttt{simusched} y lo corremos para algunas tareas espec\'ificas. En la
 segunda parte, extendemos el simulador con nuevos schedulers implementados por nosotros y finalmente,
 en la tercera parte evaluamos y analizamos los distintos algoritmos de scheduling ya presentados. \\
 \end{abstract}
@@ -103,19 +103,19 @@ en la tercera parte evaluamos y analizamos los distintos algoritmos de schedulin
 En este ejercicio, programamos la tarea TaskConsola, que simular\'ia una tarea interactiva con
 el usuario. \\
 Para la implementaci\'on de esta tarea, primero tuvimos que registrarla para que el simulador la 
-reconozca en el archivo tasks.cpp, con la funci\'on tasksinit(void). En ese mismo archivo implementamos
-la tarea, que para el proceso n\'umero pid recibe los tres par\'ametros: n, bmin y bmax. Simplemente
+reconozca en el archivo \texttt{tasks.cpp}, con la funci\'on \texttt{tasksinit(void)}. En ese mismo archivo implementamos
+la tarea, que para el proceso n\'umero $pid$ recibe los tres par\'ametros: $n$, $bmin$ y $bmax$. Simplemente
 hacemos un ciclo que cicle n veces y que cada vez tome un entero al azar $r$ entre $bmin$ y 
-$bmax$, y cada vez llamamos a la funci\'on usoIO(pid, r), que simula hacer uso de dispositivos de
+$bmax$, y cada vez llamamos a la funci\'on \texttt{usoIO(pid, r)}, que simula hacer uso de dispositivos de
 entrada/salida. \\
 Nota(1): se denomina llamada bloqueante a aquellas llamadas en las que, si lo que esta  
 solicita no est\'a disponible, entonces el proceso llamador se queda bloqueado a la espera de un
-resultado. Es decir, no permite que otros procesos dependientes de este sigan ejecutando. Por 
+resultado. Es decir, no permite que otros procesos dependientes de éste sigan ejecutando. Por 
 el contrario, en una llamada no bloqueante, si el proceso llamador no encuentra lo que estaba
 buscando, el proceso devuelve de todas formas alg\'un resultado, permitiendo que otros procesos
 sigan ejecutando sin tener que esperar a que este proceso llamador reciba el resultado que est\'a
 esperando. \\
-Nota(2): para elegir el n\'umero pseudo-aleatorio hacemos uso de la funci\'on rand() provista
+Nota(2): para elegir el n\'umero pseudo-aleatorio hacemos uso de la funci\'on \texttt{rand()} provista
 por la librer\'a standard de C. \\
 
 \newpage
@@ -198,9 +198,9 @@ novedoso sistema de Scheduling llamado $Lottery Scheduling$, implementamos una c
 SchedLottery que recibe como par\'ametros el quantum que se va simular y una semilla 
 pseudo-aleatoria, que el scheduler va a utilizar para el manejo de los procesos. Como dice en el
 enunciado, b\'asicamente nos interes\'o implementar la idea b\'asica del algoritmo y la 
-optimizaci\'on de tickets compensatorios y en este caso, siempre trabajamos c\'olo con un n\'ucleo. \\
-La clase SchedLottery tiene como parte p\'ublica las funciones $load(pid)$, $unblock(pid)$ 
-y $tick(cpu, motivo)$. \\
+optimizaci\'on de tickets compensatorios y en este caso, siempre trabajamos s\'olo con un n\'ucleo. \\
+La clase SchedLottery tiene como parte p\'ublica las funciones \texttt{load(pid)}, \texttt{unblock(pid)} 
+y \texttt{tick(cpu, motivo)}. \\
 i) La funci\'on load(pid) la utilizamos para notificar al scheduler
 que un nuevo proceso ha llegado. Cada vez que llega un nuevo proceso le damos un ticket a dicho proceso.
 De esta forma, en el pr\'oximo sorteo el proceso ser\'a candidato a ganarlo y as\'i ser el pr\'oximo 
@@ -213,7 +213,7 @@ quantum de dicho procesador, la desalojamos), la tarea ejecut\'o una llamada blo
 bloqueada durante el \'ultimo ciclo (en cuyo caso proveemos al proceso bloqueado la compensaci\'on 
 de tickets correspondiente bas\'andonos en el paper antes mencionado) \'o porque la tarea pid 
 termin\'o (en cuyo caso desalojamos la tarea
-actual). Despu\'es de hacer estos chequeos, corremos $run\_lottery$ que se encarga de efectuar el 
+actual). Despu\'es de hacer estos chequeos, corremos \texttt{run\_lottery()} que se encarga de efectuar el 
 sorteo de tickets para la pr\'oxima vez que se necesite elegir un proceso ganador y as\'i asignarle 
 los recursos necesarios. \\
 iii) La funci\'on unblock(pid) hace que en la pr\'oxima llamada a la funci\'on tick, el proceso pid 
@@ -224,7 +224,7 @@ Por otro lado, la clase SchedLottery tiene una parte privada, que consta de vari
 que usamos para saber el quantum que tiene disponible cada proceso para ejecutarse, $seed$, que
 usamos como semilla para elegir el ticket ganador cada vez que hagamos un sorteo, $vector<ticket>$, que
 usamos para saber qu\'e tickets corresponden a cada proceso, $total\_tickets$ para tener r\'apido acceso
-a la cantidad de tickets que hay distribuidos entre los procesos y $ticket\_number$ que usamos para 
+a la cantidad de tickets que hay distribuidos entre los procesos y $tick\_number$ que usamos para 
 llevar la cuenta de cu\'antas veces llamamos a la funci\'on tick(cpu,motivo). Adem\'as, contamos con 
 las funciones privadas $compensa(pid)$, $desaloja(pid)$ y $tickets\_index(pid)$. La primera se encarga de
 calcular y asignar la compensaci\'on deseada a un proceso cuando corresponda; la segunda de que cuando
@@ -232,14 +232,16 @@ se bloquea un proceso, no est\'e disponible para ejecutar en la pr\'oxima ejecuc
 tick(cpu,motivo). Es decir, que la probabilidad de ser elegible en el sorteo sobre los tickets sea cero.
 Para eso, lo que hicimos fue sacarle todos los tickets temporalmente a dicho proceso. \\ 
 
-
-
-
 \newpage
 \index{Parte III - Evaluando los algoritmos de scheduling}
 \section{Parte III - Evaluando los algoritmos de scheduling}
 
 \subsection{Ejercicio 6}
+
+Se registró un nuevo tipo de tarea, \texttt{TaskBatch(total\_cpu, cant\_bloqueos)}. Hace uso del CPU $total\_cpu$ ticks de reloj en total, entre los cuáles hace $cant\_bloqueos$ llamadas bloqueantes, distribuidas de manera uniforme y de duración un tick de reloj.
+La implementación requirió elegir $cant\_bloqueos$ momentos entre 1 y $total\_cpu$. Para eso se guardó un arreglo de booleanos que mantiene que momentos ya fueron elegidos. Entonces se fueron generando momentos de manera pseudo\-aleatoria hasta elegir $cant\_bloqueos$ momentos \textit{distintos} para hacer llamadas bloqueantes. En el resto del tiempo, la tarea usa el procesador.
+
+\newpage
 \subsection{Ejercicio 7}
 \newpage
 \subsection{Ejercicio 8}

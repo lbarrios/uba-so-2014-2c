@@ -7,5 +7,10 @@
 *.fls
 *.ilg
 *.ind
+*.idx
+*.toc
+
+# Build temporary folder #
+##########################
 build/
 
