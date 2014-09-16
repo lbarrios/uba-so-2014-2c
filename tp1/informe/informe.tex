@@ -400,7 +400,20 @@ La implementación requirió elegir $cant\_bloqueos$ momentos entre 1 y $total\_
 
 \clearpage
 \subsection{Ejercicio 7}
-
+En este ejercicio, el objetivo es definir dos m\'etricas diferentes y a partir de estas y variando la
+cantidad de n\'ucleos utilizados y para distintos $quantums$,  concluir cu\'al es el valor \'optimo de 
+$quantum$ a los efectos de las distintas m\'etricas. \\
+La primera m\'etrica interesante que se nos ocurri\'o fue la de considerar la mediana de los tiempo extra
+que se demoraron cada uno de los procesos en finalizar, de acuerdo al tiempo m\'inimo que cada uno de dichos 
+procesos se demorar\'ian en terminar si fueran corridos cada uno por un \'unico procesador. Como se pide en
+el enunciado, mantuvimos fijo en 1 el ciclo de reloj y el costo de cambio de contexto y 2 los ciclos de 
+migraci\'on entre n\'ucleos. \\
+Analizamos qu\'e sucede cuando empleamos uno y cuatro n\'ucleos. El valor 
+\'optimo de $quantum$ para esta m\'etrica depender\'a, por ejemplo, de si lo que queremos es maximizar 
+ecuanimidad en la ejecuci\'on de procesos o de si queremos minimizar el tiempo de ejecuci\'on de cada
+proceso. En el primer caso, elegir\'iamos un $quantum$ tal que el gr\'afico de de tiempo de ejecuci\'on
+en funci\'on de tiempo sea lo m\'as parecido a una constante, mientras que en el segundo caso, eleg\'iriamos
+un $quantum$ para el cual se alcance el m\'inimo tiempo de ejecuci\'on posible. \\
 
 
 
@@ -411,37 +424,99 @@ La implementación requirió elegir $cant\_bloqueos$ momentos entre 1 y $total\_
 En esta sección implementamos una segunda versión para el scheduler tipo $Round-Robin$ que ya implementamos
 en ejercicios anteriores. En este caso, el objetivo es no permitir la migración de procesos entre núcleos y
 analizar qué sucede con la performance de este scheduler en comparación con el original para distintos lotes
-de tareas. En principio, esperaríamos que en algunos tipos de lotes un algoritmo ande mejor que el otro
-Esto es porque, por ejemplo, pensamos que si tenemos un 
-único proceso que tarda mucho en completarse y no permitimos migración entre procesos, usando el método 
-alternativo empeoraríamos la performance mientras que usando el otro método, el tiempo total que se tardaría
-en finalizar el proceso se reduciría a la mitad. Sin embargo, si aparte de dicho proceso largo tuviéramos un
-segundo proceso igual de largo, la implementación más eficiente sería la que no permite migración entre 
-núcleos (así nos ahorraríamos de perder tiempo en cambios de contexto). Finalmente, en principio creemos que
-si hubieran muchos más procesos que núcleos y de longitud similar, 
+de tareas. En principio, esperaríamos que en algunos tipos de lotes un algoritmo ande mejor que el otro.
+
+Un ejemplo fácil de ver en donde el Scheduler sin migración tiene una performance menor a la del anterior,
+es cuando se cuenta con uno o más procesos de mucha duración, alojados en un mismo núcleo, y muchos procesos
+pequeños alojados en el resto de los nucleos. En este escenario, los procesos pequeños terminarían rápidamente,
+liberando sus respectivos núcleos, mientras que los otros estarían obligados a correr en su núcleo original, 
+sin la posibilidad de migrar a los núcleos disponibles. 
+
+Basandonos en las ideas anteriores, realizamos una experimentación en donde buscamos
+explotar esta debilidad. La misma se puede apreciar en \fig{ej8-1} y \fig{ej8-2}. Sabiendo
+el código interno de asignación de procesos a la CPU, pudimos recrear un lote de tareas, compuesto
+por 3 tareas ``grandes'' y 8 tareas ``pequeñas'', de forma tal que el orden de las mismas ocasionase 
+que todas las tareas grandes caigan en un mismo procesador. En poco tiempo, todas las tareas pequeñas
+terminan su ejecución, liberando el resto de los núcleos. Aquí, se puede notar la gran ventaja del
+\textbf{Scheduler Round Robin con migración}, ya que en este punto las tres tareas restantes se 
+ejecutan de forma paralela, terminando la ejecución de todas las tareas aproximadamente a los 
+130 ciclos de clock. En la versión \textbf{sin migración}, en cambio, las tres tareas se ejecutan
+secuencialmente, casi-triplicando el tiempo total de ejecución, sobrepasando los 330 clocks totales.
+A continuación se puede apreciar la entrada utilizada para generar los gráficos:
+
+\begin{center}
+\begin{minipage}{0.4\textwidth}
+\begin{Verbatim}[frame=single,framesep=1cm,label=ej8.tsk]
+@1:
+TaskCPU 100
+@2:
+TaskCPU 10
+@3:
+TaskCPU 10
+@4:
+TaskCPU 10
+@5:
+TaskCPU 10
+@6:
+TaskCPU 100
+@7:
+TaskCPU 10
+@8:
+TaskCPU 10
+@9:
+TaskCPU 10
+@10:
+TaskCPU 10
+@11:
+TaskCPU 100
+\end{Verbatim}
+\end{minipage}
+\end{center}
+
+\begin{figure}[H]
+\includegraphics [width=\textwidth]{../graficos/sched_rr/ej8-sched-rr.png}
+\caption{Diagrama de Gantt SchedRR}
+\label{fig:ej8-1}
+\end{figure}
+\begin{figure}[H]
+\includegraphics [width=\textwidth]{../graficos/sched_rr/ej8-sched-rr2.png}
+\caption{Diagrama de Gantt SchedRR2}
+\label{fig:ej8-2}
+\end{figure}
+
+Finalmente, en principio creemos que si hubieran muchos más procesos que núcleos y de longitud similar, 
 y no se permitiera la migración de procesos entre núcleos, los tiempos de finalización de distintos 
 procesos serían muy dispares. Algo que, en principio es indeseable pues podría suceder que si a un proceso muy 
 corto le toca justo el mismo core que a un proceso muy largo, este debería esperar mucho tiempo a que el largo
 termine hasta que el procesador lo atienda. 
 
-En nuestra implementación del la clase $SchedRR2$ para implementar las mismas tres funciones básicas que venimos
-implementando en los anteriores schedulers (tick, unblock, load), utilizamos en la parte privada de la clase tres
-estructuras para el manejo de los procesos: estas son un $vector<core>$, que contiene mucha de la información 
-que teníamos en la implementación del $SchedRR$(en efecto, tenemos almacenado el quantum del core, la cantidad de
-ticks actual, un vector de entero que lleva cuenta de los procesos activos en dicho core, una cola de esos procesos para
-saber en qué orden ir ejecutándolos, y una función runNextProcess() que se encarga de sacar de la cola al
-primer proceso y ponerlo a correr), pero en este caso efectuamos una distinción entre qué procesos están en cada
-núcleo (antes, no nos importaba hacer esta distinción, porque como había migración de procesos entre 
-núcleos, no nos importaba en qué núcleo estaba cada proceso). 
+En nuestra implementación del la clase \texttt{SchedRR2},
+para proveer las mismas tres funciones básicas que venimos
+implementando en los anteriores schedulers (\textbf{TICK},\textbf{UNBLOCK},\textbf{LOAD}), 
+utilizamos tres estructuras para el manejo de los procesos, estas son: 
+un $vector<Core>$, que contiene para cada núcleo la información que teníamos 
+en la implementación del $SchedRR$, y que era compartida por todos. En efecto, 
+tenemos un \texttt{struct Core}, que almacena para cada procesador su quantum, la cantidad de 
+ticks actual, un vector de enteros que lleva cuenta de los procesos activos en dicho núcleo, 
+una cola de procesos que se encuentran disponibles (es decir, todos aquellos
+que no se encuentren bloqueados), que permita saber en qué orden deben ser ejecutados.
+Se implementó un método \texttt{runNextProcess(\textbf{CPU})}, que se encarga de preparar las estructuras
+internas del scheduler para desalojar el proceso actual, y obtiene de la cola correspondiente a esa 
+CPU el siguiente proceso.
 
-Hacemos uso de esta estructura a través de la función $getProcessCores(pid)$, que para 
-el proceso pid nos devuelve un puntero al núcleo en el cuál está presente. Entonces, ahora
-en cada tick del reloj de cada cpu, si el motivo es de bloqueo o terminación, entonces pasamos a correr en ese mismo
-cpu al próximo proceso. Mientras que si llega un nuevo proceso, lo agregamos a la cola de procesos del cpu
-en el cual se efectuó el tick y no en ninguno otro. 
+Cuando se produce un UNBLOCK, simplemente encolamos el proceso nuevamente, en su CPU correspondiente. 
+A través del método \textbf{getProcessCores(\texttt{pid})} obtenemos, dada la ID de un proceso,
+un puntero a la CPU a la cual se encuentra asignado. Si el motivo de un tick es de \textbf{EXIT} 
+o \textbf{BLOCK}, pasamos a correr al siguiente proceso, llamando al método, runNextProcess(). Si el
+motivo del tick es \textbf{TICK}, comparamos el quantum del procesador con la cantidad de ticks actuales,
+y si el mismo no resulta ser mayor, encolamos al proceso nuevamente, y luego llamamos a runNextProcess().
 
-
-
+Al momento de hacer un \textbf{LOAD}, necesitamo saber en todo momento cual es la CPU que tiene menos
+procesos activos. Para ello, utilizamos la función min\_element, que toma un elemento iterable, y un
+\textbf{Operador de Comparación}, el cual es un \texttt{struct} que en su interior contiene la lógica
+que le va a servir para deducir cuando, dados a y b dos Core, $a < b$. Esto se traduce, concretamente,
+en la comparación de los tamaños de las listas de active-process de cada core, es decir 
+$a.active\_process.size() < b.active\_process.size()$.
 
 
 
