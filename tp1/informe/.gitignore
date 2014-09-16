@@ -7,4 +7,6 @@
 *.fls
 *.ilg
 *.ind
+*.idx
+*.toc
 

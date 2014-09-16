@@ -1,4 +1,4 @@
-TRASH= informe.aux informe.log informe.out
+TRASH= informe.aux informe.log informe.out informe.toc informe.idx
 TARGET= informe.df
 
 .PHONY: clean all

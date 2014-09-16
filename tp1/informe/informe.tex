@@ -3,6 +3,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath}
 \usepackage{graphicx}
+\usepackage{float}
 %\usepackage[colorinlistoftodos]{todonotes}
 
 \usepackage{multicol}
@@ -89,11 +90,12 @@ en la actualidad por distintos sistemas operativos para manejar correcta y efici
 diversos procesos que se ejecutan concurrentemente en m\'aquinas con uno o m\'as procesadores. \\
 Intentaremos detectar las ventajas y desventajas de cada m\'etodo, as\'i como los escenarios en los
 cuales uno puede ser m\'as eficiente que otro. Para esto, dividimos el TP en tres partes: en la
-primera, presentamos el simulador simusched y lo corremos para algunas tareas espec\'ificas. En la
+primera, presentamos el simulador \texttt{simusched} y lo corremos para algunas tareas espec\'ificas. En la
 segunda parte, extendemos el simulador con nuevos schedulers implementados por nosotros y finalmente,
 en la tercera parte evaluamos y analizamos los distintos algoritmos de scheduling ya presentados. \\
 \end{abstract}
 
+\newpage
 \index{Parte I - Entendiendo el simulador simusched}
 \section{Parte I - Entendiendo el simulador simusched}
 
@@ -101,21 +103,22 @@ en la tercera parte evaluamos y analizamos los distintos algoritmos de schedulin
 En este ejercicio, programamos la tarea TaskConsola, que simular\'ia una tarea interactiva con
 el usuario. \\
 Para la implementaci\'on de esta tarea, primero tuvimos que registrarla para que el simulador la 
-reconozca en el archivo tasks.cpp, con la funci\'on tasksinit(void). En ese mismo archivo implementamos
-la tarea, que para el proceso n\'umero pid recibe los tres par\'ametros: n, bmin y bmax. Simplemente
+reconozca en el archivo \texttt{tasks.cpp}, con la funci\'on \texttt{tasksinit(void)}. En ese mismo archivo implementamos
+la tarea, que para el proceso n\'umero $pid$ recibe los tres par\'ametros: $n$, $bmin$ y $bmax$. Simplemente
 hacemos un ciclo que cicle n veces y que cada vez tome un entero al azar $r$ entre $bmin$ y 
-$bmax$, y cada vez llamamos a la funci\'on usoIO(pid, r), que simula hacer uso de dispositivos de
+$bmax$, y cada vez llamamos a la funci\'on \texttt{usoIO(pid, r)}, que simula hacer uso de dispositivos de
 entrada/salida. \\
 Nota(1): se denomina llamada bloqueante a aquellas llamadas en las que, si lo que esta  
 solicita no est\'a disponible, entonces el proceso llamador se queda bloqueado a la espera de un
-resultado. Es decir, no permite que otros procesos dependientes de este sigan ejecutando. Por 
+resultado. Es decir, no permite que otros procesos dependientes de éste sigan ejecutando. Por 
 el contrario, en una llamada no bloqueante, si el proceso llamador no encuentra lo que estaba
 buscando, el proceso devuelve de todas formas alg\'un resultado, permitiendo que otros procesos
 sigan ejecutando sin tener que esperar a que este proceso llamador reciba el resultado que est\'a
 esperando. \\
-Nota(2): para elegir el n\'umero pseudo-aleatorio hacemos uso de la funci\'on rand() provista
+Nota(2): para elegir el n\'umero pseudo-aleatorio hacemos uso de la funci\'on \texttt{rand()} provista
 por la librer\'a standard de C. \\
 
+\newpage
 \subsection{Ejercicio 2}
 Para seguir entendiendo el funcionamiento del simulador simusched, ahora pasamos a escribir un lote
 de 3 tareas distintas: una intensiva en CPU y las otras dos de tipo interactivo. Vamos a ejecutar y
@@ -137,8 +140,20 @@ que es lo que nosotros esper\'abamos. Esto nos da la pauta de que m\'as procesad
 mucha m\'as eficiencia y velocidad: hay otros factores que son m\'as importantes, como el algoritmo de
 scheduling utilizado, y la consideraci\'on de las caracter\'isticas del lote de tareas que voy a querer
 correr. \\
+A continuaci\'on, presentamos los diagramas de Gantt de los cuales hablamos: \\
+
+\includegraphics [width=17cm]{../graficos/sched_fcfs/cpu_intensivo.png} {Fig. 2.1}
+\includegraphics [width=17cm]{../graficos/sched_fcfs/cpu_intensivo2.png} {Fig. 2.2}
+\includegraphics [width=17cm]{../graficos/sched_fcfs/cpu_intensivo3.png} {Fig. 2.3}
+\includegraphics [width=17cm]{../graficos/sched_fcfs/interactivo.png} {Fig. 2.4}
+\includegraphics [width=17cm]{../graficos/sched_fcfs/interactivo_2.png} {Fig. 2.5}
+\includegraphics [width=17cm]{../graficos/sched_fcfs/interactivo_3.png} {Fig. 2.6}
+\includegraphics [width=17cm]{../graficos/sched_fcfs/interactivo2.png} {Fig. 2.7}
+\includegraphics [width=17cm]{../graficos/sched_fcfs/interactivo2_2.png} {Fig. 2.8}
+\includegraphics [width=17cm]{../graficos/sched_fcfs/interactivo2_3.png} {Fig. 2.9}
 
 
+\newpage
 \index{Parte II - Extendiendo el simulador con nuevos schedulers}
 \section{Parte II - Extendiendo el simulador con nuevos schedulers}
 
@@ -173,16 +188,19 @@ cuando es necesario pasar a ejecutar un nuevo proceso. Y lo que hacemos es sacar
 esperando en la cola de la misma y ponerlo a correr, al mismo tiempo que inicializamos la variable
 $cant\_ticks[pid]$ a cero (inicializamos el contador de ticks para el proceso actual en ejecuci\'on a cero). \\
 
+\newpage
 \subsection{Ejercicio 4}
+
+\newpage
 \subsection{Ejercicio 5}
 En este ejercicio, basados en el paper de Waldspurger, C.A. y Weihl en el cu\'al presentan un 
 novedoso sistema de Scheduling llamado $Lottery Scheduling$, implementamos una clase que llamamos
 SchedLottery que recibe como par\'ametros el quantum que se va simular y una semilla 
 pseudo-aleatoria, que el scheduler va a utilizar para el manejo de los procesos. Como dice en el
 enunciado, b\'asicamente nos interes\'o implementar la idea b\'asica del algoritmo y la 
-optimizaci\'on de tickets compensatorios y en este caso, siempre trabajamos c\'olo con un n\'ucleo. \\
-La clase SchedLottery tiene como parte p\'ublica las funciones $load(pid)$, $unblock(pid)$ 
-y $tick(cpu, motivo)$. \\
+optimizaci\'on de tickets compensatorios y en este caso, siempre trabajamos s\'olo con un n\'ucleo. \\
+La clase SchedLottery tiene como parte p\'ublica las funciones \texttt{load(pid)}, \texttt{unblock(pid)} 
+y \texttt{tick(cpu, motivo)}. \\
 i) La funci\'on load(pid) la utilizamos para notificar al scheduler
 que un nuevo proceso ha llegado. Cada vez que llega un nuevo proceso le damos un ticket a dicho proceso.
 De esta forma, en el pr\'oximo sorteo el proceso ser\'a candidato a ganarlo y as\'i ser el pr\'oximo 
@@ -195,7 +213,7 @@ quantum de dicho procesador, la desalojamos), la tarea ejecut\'o una llamada blo
 bloqueada durante el \'ultimo ciclo (en cuyo caso proveemos al proceso bloqueado la compensaci\'on 
 de tickets correspondiente bas\'andonos en el paper antes mencionado) \'o porque la tarea pid 
 termin\'o (en cuyo caso desalojamos la tarea
-actual). Despu\'es de hacer estos chequeos, corremos $run\_lottery$ que se encarga de efectuar el 
+actual). Despu\'es de hacer estos chequeos, corremos \texttt{run\_lottery()} que se encarga de efectuar el 
 sorteo de tickets para la pr\'oxima vez que se necesite elegir un proceso ganador y as\'i asignarle 
 los recursos necesarios. \\
 iii) La funci\'on unblock(pid) hace que en la pr\'oxima llamada a la funci\'on tick, el proceso pid 
@@ -206,7 +224,7 @@ Por otro lado, la clase SchedLottery tiene una parte privada, que consta de vari
 que usamos para saber el quantum que tiene disponible cada proceso para ejecutarse, $seed$, que
 usamos como semilla para elegir el ticket ganador cada vez que hagamos un sorteo, $vector<ticket>$, que
 usamos para saber qu\'e tickets corresponden a cada proceso, $total\_tickets$ para tener r\'apido acceso
-a la cantidad de tickets que hay distribuidos entre los procesos y $ticket\_number$ que usamos para 
+a la cantidad de tickets que hay distribuidos entre los procesos y $tick\_number$ que usamos para 
 llevar la cuenta de cu\'antas veces llamamos a la funci\'on tick(cpu,motivo). Adem\'as, contamos con 
 las funciones privadas $compensa(pid)$, $desaloja(pid)$ y $tickets\_index(pid)$. La primera se encarga de
 calcular y asignar la compensaci\'on deseada a un proceso cuando corresponda; la segunda de que cuando
@@ -214,29 +232,82 @@ se bloquea un proceso, no est\'e disponible para ejecutar en la pr\'oxima ejecuc
 tick(cpu,motivo). Es decir, que la probabilidad de ser elegible en el sorteo sobre los tickets sea cero.
 Para eso, lo que hicimos fue sacarle todos los tickets temporalmente a dicho proceso. \\ 
 
-
-
-
+\newpage
 \index{Parte III - Evaluando los algoritmos de scheduling}
 \section{Parte III - Evaluando los algoritmos de scheduling}
 
 \subsection{Ejercicio 6}
+
+Se registró un nuevo tipo de tarea, \texttt{TaskBatch(total\_cpu, cant\_bloqueos)}. Hace uso del CPU $total\_cpu$ ticks de reloj en total, entre los cuáles hace $cant\_bloqueos$ llamadas bloqueantes, distribuidas de manera uniforme y de duración un tick de reloj.
+La implementación requirió elegir $cant\_bloqueos$ momentos entre 1 y $total\_cpu$. Para eso se guardó un arreglo de booleanos que mantiene que momentos ya fueron elegidos. Entonces se fueron generando momentos de manera pseudo\-aleatoria hasta elegir $cant\_bloqueos$ momentos \textit{distintos} para hacer llamadas bloqueantes. En el resto del tiempo, la tarea usa el procesador.
+
+\newpage
 \subsection{Ejercicio 7}
+\newpage
 \subsection{Ejercicio 8}
+En esta secci\'on implementamos una segunda versi\'on para el scheduler tipo $Round-Robin$ que ya implementamos
+en ejercicios anteriores. En este caso, el objetivo es no permitir la migraci\'on de procesos entre n\'ucleos y
+analizar qu\'e sucede con la performance de este scheduler en comparaci\'on con el original para distintos lotes
+de tareas. En principio, esperar\'iamos que en algunos tipos de lotes un algoritmo ande mejor que el otro
+Esto es porque, por ejemplo, pensamos que si tenemos un 
+\'unico proceso que tarda mucho en completarse y no permitimos migraci\'on entre procesos, usando el m\'etodo 
+alternativo empeorar\'iamos la performance mientras que usando el otro m\'etodo, el tiempo total que se tardar\'ia
+en finalizar el proceso se reducir\'ia a la mitad. Sin embargo, si aparte de dicho proceso largo tuvi\'eramos un
+segundo proceso igual de largo, la implementaci\'on m\'as eficiente ser\'ia la que no permite migraci\'on entre 
+n\'ucleos (as\'i nos ahorrar\'iamos de perder tiempo en cambios de contexto). Finalmente, en principio creemos que
+si hubieran muchos m\'as procesos que n\'ucleos y de longitud similar, 
+y no se permitiera la migraci\'on de procesos entre n\'ucleos, los tiempos de finalizaci\'on de distintos 
+procesos ser\'ian muy dispares. Algo que, en principio es indeseable pues podr\'ia suceder que si a un proceso muy 
+corto le toca justo el mismo core que a un proceso muy largo, este deber\'ia esperar mucho tiempo a que el largo
+termine hasta que el procesador lo atienda. \\
+En nuestra implementaci\'on del la clase $SchedRR2$ para implementar las mismas tres funciones b\'asicas que venimos
+implementando en los anteriores schedulers (tick, unblock, load), utilizamos en la parte privada de la clase tres
+estructuras para el manejo de los procesos: estas son un $vector<core>$, que contiene mucha de la informaci\'on 
+que ten\'iamos en la implementaci\'on del $SchedRR$(en efecto, tenemos almacenado el quantum del core, la cantidad de
+ticks actual, un vector de entero que lleva cuenta de los procesos activos en dicho core, una cola de esos procesos para
+saber en qu\'e orden ir ejecut\'andolos, y una funci\'on runNextProcess() que se encarga de sacar de la cola al
+primer proceso y ponerlo a correr), pero en este caso efectuamos una distinci\'on entre qu\'e procesos est\'an en cada
+n\'ucleo (antes, no nos importaba hacer esta distinci\'on, porque como hab\'ia migraci\'on de procesos entre 
+n\'ucleos, no nos importaba en qu\'e n\'ucleo estaba cada proceso). \\
+Hacemos uso de esta estructura a trav\'es de la funci\'on $getProcessCores(pid)$, que para 
+el proceso pid nos devuelve un puntero al n\'ucleo en el cu\'al est\'a presente. Entonces, ahora
+en cada tick del reloj de cada cpu, si el motivo es de bloqueo o terminaci\'on, entonces pasamos a correr en ese mismo
+cpu al pr\'oximo proceso. Mientras que si llega un nuevo proceso, lo agregamos a la cola de procesos del cpu
+en el cual se efectu\'o el tick y no en ninguno otro. \\
+\newpage
 \subsection{Ejercicio 9}
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.66]{../experimentacion/ej9-fairness/tiempo_final/prueba-tiempo-final.png}
+\caption{Tiempo de ejecución de cuatro tareas idénticas}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.66]{../experimentacion/ej9-fairness/fairness/plot.png}
+\caption{Desvío estándar de la cantidad de ticks asignados a cada proceso}
+\end{figure}
+
+\newpage
 \subsection{Ejercicio 10}
 
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.5]{../experimentacion/ej10-compensation/gant-sin.png}
+\caption{Diagrama de $gant$ con $compensation\ tickets$}
+\end{figure}
 
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.5]{../experimentacion/ej10-compensation/gant-con.png}
+\caption{Diagrama de $gant$ sin $compensation\ tickets$}
+\end{figure}
 
-
-
-
-
-
-
-
-
-
-
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.66]{../experimentacion/ej10-compensation/plot-comparativa.png}
+\caption{Comparación de $fairness$ con y sin $compensation\ tickets$}
+\end{figure}
 
 \end{document}
