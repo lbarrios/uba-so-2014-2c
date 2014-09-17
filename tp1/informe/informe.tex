@@ -82,6 +82,35 @@ mucha más eficiencia y velocidad}: hay otros factores que son importantes, como
 scheduling utilizado, y la consideración de las características del lote de tareas que voy a querer
 correr. 
 
+
+\begin{minipage}{0.30\textwidth}
+\begin{Verbatim}[frame=single,framesep=.5cm,label=interactivo1.tsk]
+@10:
+*2 TaskCPU 2
+*2 TaskConsola 5 1 10
+*2 TaskCPU 2
+\end{Verbatim}
+\end{minipage}
+\hfill
+\begin{minipage}{0.35\textwidth}
+\begin{Verbatim}[frame=single,framesep=.5cm,label=interactivo2.tsk]
+@10:
+*2 TaskConsola 10 1 10
+*2 TaskConsola 5 1 10
+*2 TaskConsola 10 1 10
+\end{Verbatim}
+\end{minipage}
+\hfill
+\begin{minipage}{0.25\textwidth}
+\begin{Verbatim}[frame=single,framesep=.5cm,label=cpu-intensivo.tsk]
+@5:
+*4 TaskCPU 5
+*2 TaskCPU 20
+*8 TaskCPU 20
+\end{Verbatim}
+\end{minipage}
+
+
 A continuación, presentamos los diagramas de Gantt de los experimentos realizados: 
 
 \begin{figure}[H]
@@ -431,7 +460,7 @@ ejecución pequeño.
 \begin{figure}[H]
   \centering
   \includegraphics [width=\textwidth]{../graficos/metrica_eze_plot_batch_1core_fidedigno.png}
-  \caption{\emph{Diagrama Gantt} de \texttt{SchedRR} \textbf{(1 core)}}
+  \caption{\emph{Métrica 1}: tiempo residual \textbf{(1 core)}}
   \label{fig:eze-1core}
 \end{figure}
 
@@ -462,11 +491,43 @@ considerable frente al gran aumento del tiempo residual.
 \begin{figure}[H]
   \centering
   \includegraphics [width=\textwidth]{../graficos/metrica_eze_plot_batch_4core.png}
-  \caption{\emph{Diagrama Gantt} de \texttt{SchedRR} \textbf{(4 cores)}}
+  \caption{\emph{Métrica 1}: tiempo residual \textbf{(4 cores)}}
   \label{fig:eze-4core}
 \end{figure}
 
+La segunda métrica que consideramos fue el tiempo de respuesta, que esta definido como el tiempo que 
+transcurre entre que una tarea se desbloquea y vuelve a tomar el control del procesador. Para cada proceso,
+calculamos la mediana de los tiempos de respuesta en cada llamada bloqueante. De entre ellos, tomamos 
+para cada quantum, los valores máximo, mínimo y mediano. Así obtuvimos \fig{metrica-gonza-1core} para las 
+mediciones efectuadas con un único core y \fig{metrica-gonza-4cores} para las mediciones efectuadas con cuatro
+cores. 
 
+\begin{figure}
+  \centering
+  \includegraphics [width=\textwidth]{../codigo/plot-respuesta-muybueno.png}
+  \caption{\emph{Métrica 2}: tiempo de respuesta \textbf{(1 core)}}
+  \label{fig:metrica-gonza-1core}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics [width=\textwidth]{../codigo/plot-respuesta-4core-unpocomejor.png}
+  \caption{\emph{Métrica 2}: tiempo de respuesta \textbf{(4 cores)}}
+  \label{fig:metrica-gonza-4cores}
+\end{figure}
+
+En \fig{metrica-gonza-1core} se puede observar un mínimo local entre los valores 6 y 14 de quantum. Este 
+mínimo no es muy pronunciado, y al igual que para la métrica anterior, hay un valor de quantum a partir
+del cuál el tiempo de respuesta (antes era el tiempo residual) se estabiliza. En este caso tomamos como
+quantum óptimo el valor 10. 
+
+En \fig{metrica-gonza-4cores} se observan tres curvas que presentan una gran fluctuación y no se puede 
+encontrar un valor de quantum óptimo ó uno a partir del cuál el tiempo de respuesta se estabilize. De todas 
+formas, por más que hay una fluctuación marcada en los tiempos de respuesta, este varía en el mismo rango
+aproximadamente (entre 3 y 4) a partir de un cierto valor de quantum (quantum = 5). 
+
+Algo muy destacable de esta métrica, en comparación con la anterior, es que su media está posicionada más
+cerca del valor mínimo que del valor máximo (algo que no sucedía en la primera métrica).
 
 
 
