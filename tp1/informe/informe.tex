@@ -32,7 +32,7 @@
 \section{Entendiendo el simulador simusched}
 
 \subsection{Ejercicio 1}
-En este ejercicio, programamos la tarea TaskConsola, que simularía una tarea interactiva con
+En este ejercicio, programamos la tarea \texttt{TaskConsola}, que simularía una tarea interactiva con
 el usuario. 
 
 Para la implementación de esta tarea, primero tuvimos que registrarla para que el simulador la 
@@ -44,41 +44,45 @@ por la librerá standard de C.} $r$ entre $bmin$ y
 $bmax$, y cada vez llamamos a la función \texttt{usoIO(pid, r)}, que simula hacer uso de dispositivos de
 entrada/salida. 
 
-Se denomina llamada bloqueante a aquellas llamadas en las que, si lo que esta  
+Se denomina \textbf{llamada bloqueante} a aquellas en las que, si lo que esta  
 solicita no está disponible, entonces el proceso llamador se queda bloqueado a la espera de un
-resultado. Es decir, no permite que otros procesos dependientes de éste sigan ejecutando. Por 
+resultado. Es decir, \textbf{no permite que otros procesos dependientes de éste sigan ejecutando}. Por 
 el contrario, en una llamada no bloqueante, si el proceso llamador no encuentra lo que estaba
-buscando, el proceso devuelve de todas formas algún resultado, permitiendo que otros procesos
-sigan ejecutando sin tener que esperar a que este proceso llamador reciba el resultado que está
+buscando, el mismo devuelve de todas formas algún resultado, permitiendo así que otros procesos
+sigan ejecutandose sin tener que esperar a que este proceso llamador reciba el resultado que está
 esperando. 
+
+
+
+
 
 \clearpage
 \subsection{Ejercicio 2}
-Para seguir entendiendo el funcionamiento del simulador simusched, ahora pasamos a escribir un lote
-de 3 tareas distintas: una intensiva en CPU y las otras dos de tipo interactivo. Vamos a ejecutar y
-graficar la simulación usando el algoritmo FCFS para 1, 2 y 3 núcleos. 
+Para seguir entendiendo el funcionamiento del simulador \textbf{simusched}, ahora pasamos a escribir un lote
+de 3 tareas distintas: una \textbf{intensiva en CPU} y las otras dos de tipo \textbf{interactivo}. 
+Vamos a ejecutar y graficar la simulación usando el \texttt{algoritmo FCFS} para 1, 2 y 3 núcleos. 
 
 En el caso de la tarea que hace uso intensivo del cpu, pudimos observar que usando dos cpu's, las
-tareas se logran ejecutar prácticamente en la mitad de tiempo (en el gráfico se ve claramente como
-se aprovecha el hecho de que hay dos cpu's, y en todo momento se puede observar cómo hay dos cpu's 
+tareas se logran ejecutar prácticamente en la mitad de tiempo (en \fig{intensivas-2cpu} se ve claramente como
+se aprovecha el hecho de que hay dos cpu's, y en todo momento se puede observar cómo estas están 
 trabajando al mismo tiempo en dos tareas distintas. Cuando introdujimos un tercer cpu, sucedió 
 exactamente lo mismo: cada vez que algún cpu terminaba de ejecutar un proceso, inmediatamente
 comenzaba a ejecutar el próximo proceso aún no atendido. 
 
 En el caso de las tareas interactivas, pudimos observar los momentos en los que se detectaba que 
 algún procesador era bloqueado y cómo en ese tiempo el procesador se quedaba trabado en la misma 
-tarea. Creemos que ese tiempo de espera podría ser aprovechado para seguir ejecutando algún otro
-proceso, implementando algún otro sistema de scheduling. 
+tarea. Creemos que implementando algún otro sistema de scheduling, esta espera podría ser aprovechada 
+por el procesador para seguir ejecutando algún otro proceso. 
 
 Otra cosa importante a destacar, es que en los tres lotes de tareas, cuando pasamos de usar un único
 core a usar dos, el tiempo total que se tardó en ejecutar todas las tareas disminuyó a la mitad.
 Mientras que cuando usamos tres cores, el tiempo no disminuyó a un tercio de lo que tardaba antes,
-que es lo que nosotros esperábamos. Esto nos da la pauta de que más procesadores no siempre
-mucha más eficiencia y velocidad: hay otros factores que son más importantes, como el algoritmo de
+que es lo que nosotros esperábamos. Esto nos da la pauta de que \textbf{más procesadores no siempre implica
+mucha más eficiencia y velocidad}: hay otros factores que son importantes, como el algoritmo de
 scheduling utilizado, y la consideración de las características del lote de tareas que voy a querer
 correr. 
 
-A continuación, presentamos los diagramas de Gantt de los cuales hablamos: 
+A continuación, presentamos los diagramas de Gantt de los experimentos realizados: 
 
 \begin{figure}[H]
   \includegraphics [width=\textwidth]{../graficos/sched_fcfs/cpu_intensivo.png}
@@ -87,6 +91,7 @@ A continuación, presentamos los diagramas de Gantt de los cuales hablamos:
 \begin{figure}[H]
   \includegraphics [width=\textwidth]{../graficos/sched_fcfs/cpu_intensivo2.png}
   \caption{Intensivas en CPU}
+  \label{fig:intensivas-2cpu}
 \end{figure}
 \begin{figure}[H]
   \includegraphics [width=\textwidth]{../graficos/sched_fcfs/cpu_intensivo3.png}
@@ -403,17 +408,63 @@ La implementación requirió elegir $cant\_bloqueos$ momentos entre 1 y $total\_
 En este ejercicio, el objetivo es definir dos m\'etricas diferentes y a partir de estas y variando la
 cantidad de n\'ucleos utilizados y para distintos $quantums$,  concluir cu\'al es el valor \'optimo de 
 $quantum$ a los efectos de las distintas m\'etricas. \\
-La primera m\'etrica interesante que se nos ocurri\'o fue la de considerar la mediana de los tiempo extra
+La primera m\'etrica interesante que se nos ocurri\'o fue la de considerar la mediana de los tiempos extra
 que se demoraron cada uno de los procesos en finalizar, de acuerdo al tiempo m\'inimo que cada uno de dichos 
-procesos se demorar\'ian en terminar si fueran corridos cada uno por un \'unico procesador. Como se pide en
+procesos se demorar\'ia en terminar si fueran corridos cada uno por un \'unico procesador. Como se pide en
 el enunciado, mantuvimos fijo en 1 el ciclo de reloj y el costo de cambio de contexto y 2 los ciclos de 
-migraci\'on entre n\'ucleos. \\
+migraci\'on entre n\'ucleos.
+
 Analizamos qu\'e sucede cuando empleamos uno y cuatro n\'ucleos. El valor 
 \'optimo de $quantum$ para esta m\'etrica depender\'a, por ejemplo, de si lo que queremos es maximizar 
 ecuanimidad en la ejecuci\'on de procesos o de si queremos minimizar el tiempo de ejecuci\'on de cada
-proceso. En el primer caso, elegir\'iamos un $quantum$ tal que el gr\'afico de de tiempo de ejecuci\'on
-en funci\'on de tiempo sea lo m\'as parecido a una constante, mientras que en el segundo caso, eleg\'iriamos
-un $quantum$ para el cual se alcance el m\'inimo tiempo de ejecuci\'on posible. \\
+proceso. En el primer caso, elegir\'iamos un $quantum$ tal que el gr\'afico de tiempo residual de ejecuci\'on
+en funci\'on del quantum sea lo m\'as parecido a una constante. 
+
+En estos gráficos, pretendemos representar
+para cada quantum, la mediana de todos los tiempos residuales de ejecución, junto con el mínimo
+y el máximo tiempo residual. Podemos analizar las tres curvas que quedan asi formadas: si la curva de la 
+mediana está a corta distancia de, por ejemplo, la curva de máximos, entonces esto nos indicaría
+que la mayor parte de los procesos tienen un tiempo residual de ejecución grande, mientras que si
+estuviera cerca de la curva mínima, entonces la mayor parte de los procesos tienen un tiempo residual de 
+ejecución pequeño. 
+
+\begin{figure}[H]
+  \centering
+  \includegraphics [width=\textwidth]{../graficos/metrica_eze_plot_batch_1core_fidedigno.png}
+  \caption{\emph{Diagrama Gantt} de \texttt{SchedRR} \textbf{(1 core)}}
+  \label{fig:eze-1core}
+\end{figure}
+
+Además, el valor para el cuál se estabiliza la curva de medianas nos dará la pauta de en qué rango se encuentra
+el quantum  óptimo que podemos tomar para minimizar (usando cierta cantidad de cores) el tiempo residual 
+de ejecución de los procesos. 
+
+Teniendo todo esto en cuenta, consideramos que en \fig{eze-1core} el quantum óptimo se encuentra entre 5 y 10.
+No tomamos un quantum mayor ya que no percibimos ningún tipo de ventaja en tomar un valor que podría
+perjudicar la calidad del scheduler desde la perspectiva de otras métricas (como ecuanimidad, ya que al 
+ampliar el quantum estamos ampliando de igual forma la heterogeneidad en la distribución del tiempo de CPU),
+sin aportar ningún tipo de beneficio apreciable a los efectos de esta.
+Con \fig{eze-4core} sucede algo similar, con dos diferencias básicas: la primera es que las tres funciones
+graficadas son menores, y que la media se encuentra, en proporción, más cerca del
+mínimo que con un sólo core. Y dado que la mitad de los valores se encuentran debajo de la media, podemos
+afirmar que en líneas generales la mayoría de los valores resultan ser mucho menores. Otro detalle
+a considerar, son las pequeñas variaciones en las curvas, que no se dan en el caso de 1 core. Estas ocurren
+debido a que al hacer uso de más de 1 core, la probabilidad de que ocurra el evento ``todas las tareas
+se encuentran bloqueadas'' es mucho más alta.
+
+Observamos que con quantums muy pequeños, el tiempo residual de ejecución es casi el doble que el percibido
+con un quantum óptimo. Adjudicamos estos valores a la similitud entre los valores del quantum y los tiempos 
+de migración y cambio de contexto; bajo estas circunstancias, gran parte del tiempo de CPU es utilizado para
+realizar estas tareas. Se puede apreciar también que el nivel de ecuanimidad (fairness) crece a medida que 
+el quantum disminuye (porque las curvas se acercan unas a otras), sin embargo no es un beneficio 
+considerable frente al gran aumento del tiempo residual. 
+
+\begin{figure}[H]
+  \centering
+  \includegraphics [width=\textwidth]{../graficos/metrica_eze_plot_batch_4core.png}
+  \caption{\emph{Diagrama Gantt} de \texttt{SchedRR} \textbf{(4 cores)}}
+  \label{fig:eze-4core}
+\end{figure}
 
 
 
