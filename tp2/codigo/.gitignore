@@ -1,0 +1,4 @@
+servidor_multi
+servidor_mono
+cliente
+*.o
