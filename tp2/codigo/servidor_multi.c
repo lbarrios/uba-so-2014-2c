@@ -182,7 +182,10 @@ int main( void )
   /// Aceptar conexiones entrantes.
   socket_size = sizeof( remoto );
 
-  pthread_attr_t attr;
+  pthread_attr_t attr; //< Acá voy a guardar la configuración para crear el thread
+  // Inicializo la configuración por defecto
+  pthread_attr_init( &( attr ) );
+  
   for ( ;; )
   {
     if ( -1 == ( socketfd_cliente =
@@ -192,20 +195,22 @@ int main( void )
     }
     else
     {
-      pthread_t tid;
-      pthread_attr_init( &( attr ) );
+      pthread_t tid; //< Acá voy a guardar el Thread-ID
+      // Reservo memoria para el struct que contiene los parámetros que va a recibir el thread
       Params* params = ( Params* ) malloc( sizeof( Params ) );
       {
-        params->socket_fd = socketfd_cliente;
-        params->el_aula = &el_aula;
+        params->socket_fd = socketfd_cliente; //< El thread recibe el descriptor de la conexión con el cliente
+        params->el_aula = &el_aula; //< También recibe una referencia al aula
       }
-      pthread_create( &( tid ),
-                      &( attr ),
-                      ( void (*))( void* ) wrap_atendedor_de_alumno,
-                      ( void* ) params );
-      pthread_attr_destroy( &( attr ) );
+      // Creo el thread
+      pthread_create( &( tid ), //< Puntero a int donde se va a guardar el thread-id
+                      &( attr ), //< Puntero a atributos
+                      ( void (*))( void* ) wrap_atendedor_de_alumno, //< Puntero a función que va a correr el thread
+                      ( void* ) params ); //< Puntero a un struct que contiene los parámetros
     }
   }
-
+  
+  // Elimino la configuración (el manual dice que es importante hacerlo)
+  pthread_attr_destroy( &( attr ) );
   return 0;
 }
