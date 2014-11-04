@@ -99,6 +99,7 @@ t_comando intentar_moverse( t_aula* el_aula, t_persona* alumno, t_direccion dir 
       pthread_mutex_lock(el_aula->m_cant_personas_pos[alumno->posicion_fila][alumno->posicion_columna]);  // chequar orden
       el_aula->cant_personas_pos[alumno->posicion_fila][alumno->posicion_columna]--;
       pthread_mutex_unlock(el_aula->m_cant_personas_pos[alumno->posicion_fila][alumno->posicion_columna]);
+      pudo_moverse = true;
     }
   }
   return pudo_moverse;
