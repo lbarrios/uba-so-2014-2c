@@ -6,10 +6,11 @@
 /* Estructura que almacena los datos de una reserva. */
 typedef struct
 {
-  int posiciones[ANCHO_AULA][ALTO_AULA];
+  int cant_personas_pos[ANCHO_AULA][ALTO_AULA];
   int cantidad_de_personas;
 
   int rescatistas_disponibles;
+  pthread_mutex_t* m_cant_personas_pos[ANCHO_AULA][ALTO_AULA];
 } t_aula;
 
 /* Estructura que almacena los parámetros del worker */
@@ -27,7 +28,9 @@ void t_aula_iniciar_vacia( t_aula* un_aula )
   {
     for ( j = 0; j < ALTO_AULA; j++ )
     {
-      un_aula->posiciones[i][j] = 0;
+      un_aula->cant_personas_pos[i][j] = 0;
+      un_aula->m_cant_personas_pos[i][j] = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
+      pthread_mutex_init(un_aula->m_cant_personas_pos[i][j], NULL);  //TODO: chequar que poner en vez de NULL
     }
   }
 
@@ -38,13 +41,13 @@ void t_aula_iniciar_vacia( t_aula* un_aula )
 void t_aula_ingresar( t_aula* un_aula, t_persona* alumno )
 {
   un_aula->cantidad_de_personas++;
-  un_aula->posiciones[alumno->posicion_fila][alumno->posicion_columna]++;
+  un_aula->cant_personas_pos[alumno->posicion_fila][alumno->posicion_columna]++;
 }
 
 void t_aula_liberar( t_aula* un_aula, t_persona* alumno )
 {
   un_aula->cantidad_de_personas--;
-  un_aula->posiciones[alumno->posicion_fila][alumno->posicion_columna]--;
+  un_aula->cant_personas_pos[alumno->posicion_fila][alumno->posicion_columna]--;
 }
 
 static void terminar_servidor_de_alumno( int socket_fd, t_aula* aula, t_persona* alumno )
@@ -66,25 +69,38 @@ t_comando intentar_moverse( t_aula* el_aula, t_persona* alumno, t_direccion dir 
   ///printf("%s intenta moverse hacia %s (%d, %d)... ", alumno->nombre, buf, fila, columna);
   bool entre_limites = ( fila >= 0 ) && ( columna >= 0 ) &&
                        ( fila < ALTO_AULA ) && ( columna < ANCHO_AULA );
-  bool pudo_moverse = alumno->salio ||
-                      ( entre_limites && el_aula->posiciones[fila][columna] < MAXIMO_POR_POSICION );
 
-  if ( pudo_moverse )
+  bool pudo_moverse = false;
+
+  if(entre_limites || alumno->salio)
   {
-    if ( !alumno->salio )
+    if(!alumno->salio)
     {
-      el_aula->posiciones[fila][columna]++;
+      pthread_mutex_lock(el_aula->m_cant_personas_pos[fila][columna]);
+      int personas_en_casilla = el_aula->cant_personas_pos[fila][columna];
+      if(personas_en_casilla < MAXIMO_POR_POSICION)
+      {
+        el_aula->cant_personas_pos[fila][columna]++;
+        pthread_mutex_unlock(el_aula->m_cant_personas_pos[fila][columna]);
+        pthread_mutex_lock(el_aula->m_cant_personas_pos[alumno->posicion_fila][alumno->posicion_columna]);  // chequar orden
+        el_aula->cant_personas_pos[alumno->posicion_fila][alumno->posicion_columna]--;
+        pthread_mutex_unlock(el_aula->m_cant_personas_pos[alumno->posicion_fila][alumno->posicion_columna]);
+        alumno->posicion_fila = fila;
+        alumno->posicion_columna = columna;
+        pudo_moverse = true;
+      }
+      else
+      {
+        pthread_mutex_unlock(el_aula->m_cant_personas_pos[fila][columna]);
+      }
     }
-
-    el_aula->posiciones[alumno->posicion_fila][alumno->posicion_columna]--;
-    alumno->posicion_fila = fila;
-    alumno->posicion_columna = columna;
+    else
+    {
+      pthread_mutex_lock(el_aula->m_cant_personas_pos[alumno->posicion_fila][alumno->posicion_columna]);  // chequar orden
+      el_aula->cant_personas_pos[alumno->posicion_fila][alumno->posicion_columna]--;
+      pthread_mutex_unlock(el_aula->m_cant_personas_pos[alumno->posicion_fila][alumno->posicion_columna]);
+    }
   }
-
-  //~ if (pudo_moverse)
-  //~ printf("OK!\n");
-  //~ else
-  //~ printf("Ocupado!\n");
   return pudo_moverse;
 }
 
@@ -185,7 +201,7 @@ int main( void )
   pthread_attr_t attr; //< Acá voy a guardar la configuración para crear el thread
   // Inicializo la configuración por defecto
   pthread_attr_init( &( attr ) );
-  
+
   for ( ;; )
   {
     if ( -1 == ( socketfd_cliente =
@@ -209,7 +225,7 @@ int main( void )
                       ( void* ) params ); //< Puntero a un struct que contiene los parámetros
     }
   }
-  
+
   // Elimino la configuración (el manual dice que es importante hacerlo)
   pthread_attr_destroy( &( attr ) );
   return 0;
