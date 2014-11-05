@@ -3,11 +3,15 @@
 
 #include "biblioteca.h"
 
+#define MIN_ALUMNOS_LIBRES 5
+
 /* Estructura que almacena los datos de una reserva. */
 typedef struct
 {
   int cant_personas_pos[ANCHO_AULA][ALTO_AULA];
   int cantidad_de_personas;
+  int cantidad_de_alumnos_libres;
+  int cantidad_de_alumnos_saliendo;
 
   int rescatistas_disponibles;
   pthread_mutex_t* m_cant_personas_pos[ANCHO_AULA][ALTO_AULA];
@@ -19,6 +23,9 @@ typedef struct Params_t
   int socket_fd;
   t_aula* el_aula;
 } Params;
+
+pthread_mutex_t hay_alumnos_libres_mutex;
+pthread_cond_t hay_alumnos_libres;
 
 void t_aula_iniciar_vacia( t_aula* un_aula )
 {
@@ -35,6 +42,8 @@ void t_aula_iniciar_vacia( t_aula* un_aula )
   }
 
   un_aula->cantidad_de_personas = 0;
+  un_aula->cantidad_de_alumnos_libres = 0;
+  un_aula->cantidad_de_alumnos_saliendo = 0;
   un_aula->rescatistas_disponibles = RESCATISTAS;
 }
 
@@ -46,8 +55,43 @@ void t_aula_ingresar( t_aula* un_aula, t_persona* alumno )
 
 void t_aula_liberar( t_aula* un_aula, t_persona* alumno )
 {
+  printf("Liberando al alumno...\n");
   un_aula->cantidad_de_personas--;
-  un_aula->cant_personas_pos[alumno->posicion_fila][alumno->posicion_columna]--;
+  
+  pthread_mutex_lock( &hay_alumnos_libres_mutex );
+  un_aula->cantidad_de_alumnos_libres++;
+  pthread_mutex_unlock( &hay_alumnos_libres_mutex );
+  pthread_cond_signal( &hay_alumnos_libres );
+
+  pthread_mutex_lock( &hay_alumnos_libres_mutex );
+  while ( un_aula->cantidad_de_alumnos_libres < MIN_ALUMNOS_LIBRES 
+    && un_aula->cantidad_de_alumnos_saliendo <= 0
+    && un_aula->cantidad_de_personas != 0
+  ) {
+    printf("Esperando alumnos libres (%d/5)\n", un_aula->cantidad_de_alumnos_libres);
+    pthread_cond_wait( &hay_alumnos_libres, &hay_alumnos_libres_mutex );
+  }
+
+  if( un_aula->cantidad_de_alumnos_saliendo <= 0 )
+  {
+    if( un_aula->cantidad_de_alumnos_libres >= 5 )
+    {
+      printf( "Se formó un grupo de 5 alumnos...\n" );
+      un_aula->cantidad_de_alumnos_libres -= 5;
+      un_aula->cantidad_de_alumnos_saliendo += 5;
+    }
+    else
+    {
+      un_aula->cantidad_de_alumnos_saliendo++;
+    }
+  }
+
+  printf( "Saliendo %d/5", un_aula->cantidad_de_alumnos_saliendo );
+  un_aula->cantidad_de_alumnos_saliendo--;
+
+  pthread_mutex_unlock( &hay_alumnos_libres_mutex );
+  pthread_cond_signal( &hay_alumnos_libres );
+
 }
 
 static void terminar_servidor_de_alumno( int socket_fd, t_aula* aula, t_persona* alumno )
@@ -68,41 +112,51 @@ t_comando intentar_moverse( t_aula* el_aula, t_persona* alumno, t_direccion dir 
   ///t_direccion_convertir_a_string(dir, buf);
   ///printf("%s intenta moverse hacia %s (%d, %d)... ", alumno->nombre, buf, fila, columna);
   bool entre_limites = ( fila >= 0 ) && ( columna >= 0 ) &&
-                       ( fila < ALTO_AULA ) && ( columna < ANCHO_AULA );
+                       (fila < ANCHO_AULA) && (columna < ALTO_AULA);
 
-  bool pudo_moverse = false;
-
-  if(entre_limites || alumno->salio)
+  if(alumno->salio)
   {
-    if(!alumno->salio)
+    pthread_mutex_lock(el_aula->m_cant_personas_pos[alumno->posicion_fila][alumno->posicion_columna]);
+    el_aula->cant_personas_pos[alumno->posicion_fila][alumno->posicion_columna]--;
+    pthread_mutex_unlock(el_aula->m_cant_personas_pos[alumno->posicion_fila][alumno->posicion_columna]);
+    return (t_comando) true;
+  }
+
+  if(entre_limites)
+  {
+    pthread_mutex_t* primer_mutex;
+    pthread_mutex_t* segundo_mutex;
+    if( fila<alumno->posicion_fila || (fila==alumno->posicion_fila && columna<alumno->posicion_columna) )
     {
-      pthread_mutex_lock(el_aula->m_cant_personas_pos[fila][columna]);
-      int personas_en_casilla = el_aula->cant_personas_pos[fila][columna];
-      if(personas_en_casilla < MAXIMO_POR_POSICION)
-      {
-        el_aula->cant_personas_pos[fila][columna]++;
-        pthread_mutex_unlock(el_aula->m_cant_personas_pos[fila][columna]);
-        pthread_mutex_lock(el_aula->m_cant_personas_pos[alumno->posicion_fila][alumno->posicion_columna]);  // chequar orden
-        el_aula->cant_personas_pos[alumno->posicion_fila][alumno->posicion_columna]--;
-        pthread_mutex_unlock(el_aula->m_cant_personas_pos[alumno->posicion_fila][alumno->posicion_columna]);
-        alumno->posicion_fila = fila;
-        alumno->posicion_columna = columna;
-        pudo_moverse = true;
-      }
-      else
-      {
-        pthread_mutex_unlock(el_aula->m_cant_personas_pos[fila][columna]);
-      }
+       primer_mutex = el_aula->m_cant_personas_pos[fila][columna];
+       segundo_mutex = el_aula->m_cant_personas_pos[alumno->posicion_fila][alumno->posicion_columna];
     }
     else
     {
-      pthread_mutex_lock(el_aula->m_cant_personas_pos[alumno->posicion_fila][alumno->posicion_columna]);  // chequar orden
-      el_aula->cant_personas_pos[alumno->posicion_fila][alumno->posicion_columna]--;
-      pthread_mutex_unlock(el_aula->m_cant_personas_pos[alumno->posicion_fila][alumno->posicion_columna]);
-      pudo_moverse = true;
+      primer_mutex = el_aula->m_cant_personas_pos[alumno->posicion_fila][alumno->posicion_columna];
+      segundo_mutex = el_aula->m_cant_personas_pos[fila][columna];
     }
+
+    pthread_mutex_lock(primer_mutex);
+    pthread_mutex_lock(segundo_mutex);
+
+    if(el_aula->cant_personas_pos[fila][columna] < MAXIMO_POR_POSICION)
+    {
+      el_aula->cant_personas_pos[fila][columna]++;
+      el_aula->cant_personas_pos[alumno->posicion_fila][alumno->posicion_columna]--;
+      alumno->posicion_fila = fila;
+      alumno->posicion_columna = columna;
+      
+      pthread_mutex_unlock(segundo_mutex);
+      pthread_mutex_unlock(primer_mutex);
+      return (t_comando) true;
+    }
+
+    pthread_mutex_unlock(segundo_mutex);
+    pthread_mutex_unlock(primer_mutex);
   }
-  return pudo_moverse;
+
+  return (t_comando) false;
 }
 
 void colocar_mascara( t_aula* el_aula, t_persona* alumno )
@@ -140,6 +194,7 @@ void* atendedor_de_alumno( int socket_fd, t_aula* el_aula )
     }
 
     /// Tratamos de movernos en nuestro modelo
+    printf("%s intentando moverse\n", alumno.nombre);
     bool pudo_moverse = intentar_moverse( el_aula, &alumno, direccion );
     printf( "%s se movio a: (%d, %d)\n", alumno.nombre, alumno.posicion_fila, alumno.posicion_columna );
     /// Avisamos que ocurrio
@@ -202,6 +257,15 @@ int main( void )
   pthread_attr_t attr; //< Acá voy a guardar la configuración para crear el thread
   // Inicializo la configuración por defecto
   pthread_attr_init( &( attr ) );
+
+  
+  // Inicializo el mutex para la variable de condición
+  pthread_mutex_init( &hay_alumnos_libres_mutex, (const pthread_mutexattr_t *) NULL );
+
+  // Inicializo la variable de condición
+  pthread_condattr_t __condattr;
+  pthread_condattr_init(&__condattr);
+  pthread_cond_init( &hay_alumnos_libres, &__condattr );
 
   for ( ;; )
   {

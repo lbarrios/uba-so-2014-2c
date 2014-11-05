@@ -8,7 +8,8 @@ from paises import *
 HOST = 'localhost'
 PORT = 5555
 CLIENTES = 1
-#CLIENTES = 22
+CLIENTES = 22
+CLIENTES = 1
 
 class TCPFramer:
 	def __init__(self, socket):
@@ -60,7 +61,7 @@ class Cliente:
 			
 		self.framer.send(direc)
 		response = self.framer.receive()
-		time.sleep(0.5)
+		time.sleep(0.05)
 		print("Respuesta: <"+ response+ ">")
 		if response == "OK":
 			self.posicion = (self.posicion[0] + next[0], self.posicion[1] + next[1])

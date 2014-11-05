@@ -10,6 +10,10 @@
 #include <stdbool.h>
 #include <pthread.h>
 
+#ifdef __CLANG__
+int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void (void *), void *arg);
+#endif
+
 #define PORT 5555
 #define MENSAJE_MAXIMO 1024
 #define DATO_MAXIMO 100
