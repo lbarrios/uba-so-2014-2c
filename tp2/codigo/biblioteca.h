@@ -10,6 +10,10 @@
 #include <stdbool.h>
 #include <pthread.h>
 
+#ifdef __CLANG__
+int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void (void *), void *arg);
+#endif
+
 #define PORT 5555
 #define MENSAJE_MAXIMO 1024
 #define DATO_MAXIMO 100
@@ -43,13 +47,25 @@ typedef struct {
 	int  posicion_fila;
 	int  posicion_columna;
 	bool salio;
+	bool tiene_sombrero;
+} t_persona_copada;
+
+typedef struct {
+	char nombre[STRING_MAXIMO];
+	int  posicion_fila;
+	int  posicion_columna;
+	bool salio;
 	bool tiene_mascara;
 } t_persona;
 
 void t_persona_inicializar(t_persona *persona);
+void t_persona_copada_inicializar(t_persona_copada *persona);
 
 int  enviar_nombre_y_posicion(int socketfd, t_persona *persona);
 int recibir_nombre_y_posicion(int socketfd, t_persona *persona);
+
+int  enviar_nombre_copado_y_posicion(int socketfd, t_persona_copada *persona);
+int recibir_nombre_copado_y_posicion(int socketfd, t_persona_copada *persona);
 
 int enviar_direccion(int socketfd, t_direccion direccion);
 int recibir_direccion(int socketfd, t_direccion *direccion);

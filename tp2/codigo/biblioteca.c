@@ -92,6 +92,16 @@ void t_persona_inicializar(t_persona *persona)
 	persona->tiene_mascara = false;
 }
 
+void t_persona_copada_inicializar(t_persona_copada *persona)
+{
+	strncpy(persona->nombre, "Sin Nombre", STRING_MAXIMO);
+	persona->posicion_fila    = -1;
+	persona->posicion_columna = -1;
+	
+	persona->salio = false;
+	persona->tiene_sombrero = false;
+}
+
 
 int enviar_nombre_y_posicion(int socketfd, t_persona *persona)
 {
@@ -122,6 +132,11 @@ int recibir_nombre_y_posicion(int socket_fd, t_persona *persona)
 		return -1;
 	}
 	return 0;
+}
+
+int recibir_nombre_copado_y_posicion(int socket_fd, t_persona_copada *persona)
+{
+	return recibir_nombre_y_posicion(socket_fd, (t_persona*) persona);
 }
 
 int enviar_direccion(int socketfd, t_direccion direccion)
