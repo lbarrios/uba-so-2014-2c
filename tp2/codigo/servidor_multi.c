@@ -3,7 +3,13 @@
 
 #include "biblioteca.h"
 
+#include <unistd.h>
+
 #define MIN_ALUMNOS_LIBRES 5
+#ifdef MAXIMO_POR_POSICION
+  #undef MAXIMO_POR_POSICION
+#endif
+#define MAXIMO_POR_POSICION MIN_ALUMNOS_LIBRES
 
 /* Estructura que almacena los datos de una reserva. */
 typedef struct
@@ -27,6 +33,9 @@ typedef struct Params_t
 pthread_mutex_t hay_alumnos_libres_mutex;
 pthread_cond_t hay_alumnos_libres;
 
+pthread_mutex_t hay_rescatistas_libres_mutex;
+pthread_cond_t hay_rescatistas_libres;
+
 void t_aula_iniciar_vacia( t_aula* un_aula )
 {
   int i, j;
@@ -47,21 +56,23 @@ void t_aula_iniciar_vacia( t_aula* un_aula )
   un_aula->rescatistas_disponibles = RESCATISTAS;
 }
 
-void t_aula_ingresar( t_aula* un_aula, t_persona* alumno )
+void t_aula_ingresar( t_aula* un_aula, t_persona_copada* alumno )
 {
   un_aula->cantidad_de_personas++;
   un_aula->cant_personas_pos[alumno->posicion_fila][alumno->posicion_columna]++;
 }
 
-void t_aula_liberar( t_aula* un_aula, t_persona* alumno )
+void t_aula_liberar( t_aula* un_aula, t_persona_copada* alumno )
 {
   printf("Liberando al alumno...\n");
   un_aula->cantidad_de_personas--;
+  printf("Quedan %d personas en el aula\n",un_aula->cantidad_de_personas);
   
   pthread_mutex_lock( &hay_alumnos_libres_mutex );
   un_aula->cantidad_de_alumnos_libres++;
   pthread_mutex_unlock( &hay_alumnos_libres_mutex );
   pthread_cond_signal( &hay_alumnos_libres );
+  printf("Hay %d alumnos libres.\n",un_aula->cantidad_de_alumnos_libres);
 
   pthread_mutex_lock( &hay_alumnos_libres_mutex );
   while ( un_aula->cantidad_de_alumnos_libres < MIN_ALUMNOS_LIBRES 
@@ -86,7 +97,7 @@ void t_aula_liberar( t_aula* un_aula, t_persona* alumno )
     }
   }
 
-  printf( "Saliendo %d/5", un_aula->cantidad_de_alumnos_saliendo );
+  printf( "Saliendo %d/5...\n", un_aula->cantidad_de_alumnos_saliendo );
   un_aula->cantidad_de_alumnos_saliendo--;
 
   pthread_mutex_unlock( &hay_alumnos_libres_mutex );
@@ -94,7 +105,7 @@ void t_aula_liberar( t_aula* un_aula, t_persona* alumno )
 
 }
 
-static void terminar_servidor_de_alumno( int socket_fd, t_aula* aula, t_persona* alumno )
+static void terminar_servidor_de_alumno( int socket_fd, t_aula* aula, t_persona_copada* alumno )
 {
   printf( ">> Se interrumpió la comunicación con una consola.\n" );
   close( socket_fd );
@@ -103,7 +114,7 @@ static void terminar_servidor_de_alumno( int socket_fd, t_aula* aula, t_persona*
 }
 
 
-t_comando intentar_moverse( t_aula* el_aula, t_persona* alumno, t_direccion dir )
+t_comando intentar_moverse( t_aula* el_aula, t_persona_copada* alumno, t_direccion dir )
 {
   int fila = alumno->posicion_fila;
   int columna = alumno->posicion_columna;
@@ -159,19 +170,21 @@ t_comando intentar_moverse( t_aula* el_aula, t_persona* alumno, t_direccion dir 
   return (t_comando) false;
 }
 
-void colocar_mascara( t_aula* el_aula, t_persona* alumno )
+void colocar_sombrero( t_aula* el_aula, t_persona_copada* alumno )
 {
-  printf( "Esperando rescatista. Ya casi %s!\n", alumno->nombre );
-  alumno->tiene_mascara = true;
+  printf( "Colocando sombrero!!!. Ya casi %s!\n", alumno->nombre );
+  alumno->tiene_sombrero = true;
+  usleep(5000 * 1000);
+  printf( "Ya se le colocó el sombrero a %s!\n", alumno->nombre );
 }
 
 
 void* atendedor_de_alumno( int socket_fd, t_aula* el_aula )
 {
-  t_persona alumno;
-  t_persona_inicializar( &alumno );
+  t_persona_copada alumno;
+  t_persona_copada_inicializar( &alumno );
 
-  if ( recibir_nombre_y_posicion( socket_fd, &alumno ) != 0 )
+  if ( recibir_nombre_copado_y_posicion( socket_fd, &alumno ) != 0 )
   {
     /* O la consola cortó la comunicación, o hubo un error. Cerramos todo. */
     terminar_servidor_de_alumno( socket_fd, NULL, NULL );
@@ -207,11 +220,34 @@ void* atendedor_de_alumno( int socket_fd, t_aula* el_aula )
     }
   }
 
-  colocar_mascara( el_aula, &alumno );
+  printf("Esperando rescatista para poner sombrero a alumno.\n");
+  // Me fijo si hay rescatistas disponibles
+  pthread_mutex_lock(&hay_rescatistas_libres_mutex);
+  while ( el_aula->rescatistas_disponibles <= 0 ) {
+    // Mientras no haya rescatistas disponibles, espero
+    pthread_cond_wait(&hay_rescatistas_libres, &hay_rescatistas_libres_mutex);
+  }
+  // Una vez que se que hay al menos un rescatista disponible, resto uno a la cantidad de disponibles
+  el_aula->rescatistas_disponibles--;
+  printf("Se desocupó un rescatista. Quedan %d rescatistas desocupados.\n",el_aula->rescatistas_disponibles);
+  pthread_mutex_unlock(&hay_rescatistas_libres_mutex);
+
+  // Le coloco el sombrero al alumno, mientras tanto el rescatista está ocupado
+  colocar_sombrero( el_aula, &alumno );
+  printf("Se colocó el sombrero al alumno.\n");
+
+  // Una vez que le coloqué el sombrero, el rescatista se desocupó, así que le sumo uno a la cantidad de disponibles
+  pthread_mutex_lock(&hay_rescatistas_libres_mutex);
+  el_aula->rescatistas_disponibles++;
+  pthread_mutex_unlock(&hay_rescatistas_libres_mutex);
+  pthread_cond_signal(&hay_rescatistas_libres);
+  printf("Quedan %d rescatistas desocupados.\n",el_aula->rescatistas_disponibles);
+
   t_aula_liberar( el_aula, &alumno );
   enviar_respuesta( socket_fd, LIBRE );
   printf( "Listo, %s es libre!\n", alumno.nombre );
-  return NULL;
+ 	fflush(stdout);
+	return NULL;
 }
 
 void wrap_atendedor_de_alumno( Params* params )
