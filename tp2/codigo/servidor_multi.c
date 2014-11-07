@@ -16,8 +16,11 @@ typedef struct
 {
   int cant_personas_pos[ANCHO_AULA][ALTO_AULA];
   int cantidad_de_personas;
+  pthread_mutex_t* cantidad_de_personas_mutex;
+
   int cantidad_de_alumnos_libres;
   int cantidad_de_alumnos_saliendo;
+  pthread_mutex_t* cantidad_de_alumnos_saliendo_mutex;
 
   int rescatistas_disponibles;
   pthread_mutex_t* m_cant_personas_pos[ANCHO_AULA][ALTO_AULA];
@@ -58,48 +61,75 @@ void t_aula_iniciar_vacia( t_aula* un_aula )
 
 void t_aula_ingresar( t_aula* un_aula, t_persona_copada* alumno )
 {
+  pthread_mutex_lock(un_aula->cantidad_de_personas_mutex);
   un_aula->cantidad_de_personas++;
   un_aula->cant_personas_pos[alumno->posicion_fila][alumno->posicion_columna]++;
+  pthread_mutex_unlock(un_aula->cantidad_de_personas_mutex);
 }
 
 void t_aula_liberar( t_aula* un_aula, t_persona_copada* alumno )
 {
+  /* Pido mutex y resto 1 a la cantidad de personas */
   printf("Liberando al alumno...\n");
+  pthread_mutex_lock(un_aula->cantidad_de_personas_mutex);
   un_aula->cantidad_de_personas--;
+  pthread_mutex_unlock(un_aula->cantidad_de_personas_mutex);
   printf("Quedan %d personas en el aula\n",un_aula->cantidad_de_personas);
-  
+  /* Libero el mutex para la cantidad de personas */
+
+  /* Pido mutex para la cantidad de alumnos libres y la aumento en 1 */
   pthread_mutex_lock( &hay_alumnos_libres_mutex );
   un_aula->cantidad_de_alumnos_libres++;
   pthread_mutex_unlock( &hay_alumnos_libres_mutex );
+  /* Libero el mutex para la cantidad de alumnos libres */
+
+  // Hago signal sobre la variable de condición de alumnos libres
   pthread_cond_signal( &hay_alumnos_libres );
   printf("Hay %d alumnos libres.\n",un_aula->cantidad_de_alumnos_libres);
 
+  // Pido mutex para la cantidad de alumnos libres
   pthread_mutex_lock( &hay_alumnos_libres_mutex );
   while ( un_aula->cantidad_de_alumnos_libres < MIN_ALUMNOS_LIBRES 
     && un_aula->cantidad_de_alumnos_saliendo <= 0
     && un_aula->cantidad_de_personas != 0
   ) {
+    /**
+     * Espero mientras que no se cumplan ninguna de las siguientes condiciones:
+     *   La cantidad de alumnos libres es al menos la mínima requerida para que puedan salir.
+     *   La cantidad de personas que ya están saliendo es mayor a 0
+     *   Ya no quedan personas en el aula
+     */
+
     printf("Esperando alumnos libres (%d/5)\n", un_aula->cantidad_de_alumnos_libres);
     pthread_cond_wait( &hay_alumnos_libres, &hay_alumnos_libres_mutex );
   }
 
+  //pthread_mutex_lock( un_aula->cantidad_de_alumnos_saliendo_mutex );
+  /* Si llegué hasta aquí, significa que este alumno se encuentra en condiciones de salir,
+    entonces, si no hay personas saliendo... */
   if( un_aula->cantidad_de_alumnos_saliendo <= 0 )
   {
-    if( un_aula->cantidad_de_alumnos_libres >= 5 )
+    /* ...y la cantidad de alumnos libre es mayor o igual al mínimo (MIN_ALUMNOS_LIBRES) */
+    if( un_aula->cantidad_de_alumnos_libres >= MIN_ALUMNOS_LIBRES )
     {
-      printf( "Se formó un grupo de 5 alumnos...\n" );
-      un_aula->cantidad_de_alumnos_libres -= 5;
-      un_aula->cantidad_de_alumnos_saliendo += 5;
+      // ...entonces sumo "MIN_ALUMNOS_LIBRES" a la cantidad de personas saliendo
+      // Y resto "MIN_ALUMNOS_LIBRES" de la cantidad de personas libres
+      printf( "Se formó un grupo de (%d) alumnos...\n", MIN_ALUMNOS_LIBRES );
+      un_aula->cantidad_de_alumnos_libres -= MIN_ALUMNOS_LIBRES;
+      un_aula->cantidad_de_alumnos_saliendo += MIN_ALUMNOS_LIBRES;
     }
     else
     {
+      /* De lo contrario, sumo solo un alumno a la cantidad de alumnos saliendo */
       un_aula->cantidad_de_alumnos_saliendo++;
     }
   }
 
   printf( "Saliendo %d/5...\n", un_aula->cantidad_de_alumnos_saliendo );
   un_aula->cantidad_de_alumnos_saliendo--;
+  //pthread_mutex_unlock( un_aula->cantidad_de_alumnos_saliendo_mutex );
 
+  // Libero el mutex de alumnos libres, y doy un signal para que algun otro thread pueda comprobar la variable de condición
   pthread_mutex_unlock( &hay_alumnos_libres_mutex );
   pthread_cond_signal( &hay_alumnos_libres );
 
@@ -116,23 +146,28 @@ static void terminar_servidor_de_alumno( int socket_fd, t_aula* aula, t_persona_
 
 t_comando intentar_moverse( t_aula* el_aula, t_persona_copada* alumno, t_direccion dir )
 {
+  // Obtengo las filas y columnas actuales del alumno
   int fila = alumno->posicion_fila;
   int columna = alumno->posicion_columna;
+  // Actualizo las 
   alumno->salio = direccion_moverse_hacia( dir, &fila, &columna );
-  ///char buf[STRING_MAXIMO];
-  ///t_direccion_convertir_a_string(dir, buf);
-  ///printf("%s intenta moverse hacia %s (%d, %d)... ", alumno->nombre, buf, fila, columna);
   bool entre_limites = ( fila >= 0 ) && ( columna >= 0 ) &&
                        (fila < ANCHO_AULA) && (columna < ALTO_AULA);
 
+  // Si el alumno ya salió...
   if(alumno->salio)
   {
+    // Pido el mutex para el casillero en donde está parado el alumno
     pthread_mutex_lock(el_aula->m_cant_personas_pos[alumno->posicion_fila][alumno->posicion_columna]);
+    // Le resto uno a la cantidad de alumnos que se encuentran parados en el casillero donde estaba parado el alumno
     el_aula->cant_personas_pos[alumno->posicion_fila][alumno->posicion_columna]--;
+    // Libero el mutex para el casillero en donde estaba parado el alumno
     pthread_mutex_unlock(el_aula->m_cant_personas_pos[alumno->posicion_fila][alumno->posicion_columna]);
+    // Retorno true porque el alumno se pudo mover
     return (t_comando) true;
   }
 
+  // Si se encuentra dentro del rango del tablero...
   if(entre_limites)
   {
     pthread_mutex_t* primer_mutex;
@@ -167,6 +202,7 @@ t_comando intentar_moverse( t_aula* el_aula, t_persona_copada* alumno, t_direcci
     pthread_mutex_unlock(primer_mutex);
   }
 
+  // Si llegué hasta aquí es que el alumno no se pudo mover
   return (t_comando) false;
 }
 
@@ -297,11 +333,18 @@ int main( void )
   
   // Inicializo el mutex para la variable de condición
   pthread_mutex_init( &hay_alumnos_libres_mutex, (const pthread_mutexattr_t *) NULL );
+  pthread_mutex_init( &hay_rescatistas_libres_mutex, (const pthread_mutexattr_t *) NULL);
+  el_aula.cantidad_de_personas_mutex = (pthread_mutex_t*) malloc(sizeof(pthread_mutex_t));
+  pthread_mutex_init( el_aula.cantidad_de_personas_mutex, (const pthread_mutexattr_t *) NULL);
+  el_aula.cantidad_de_alumnos_saliendo_mutex = (pthread_mutex_t*) malloc(sizeof(pthread_mutex_t));
+  pthread_mutex_init( el_aula.cantidad_de_alumnos_saliendo_mutex, (const pthread_mutexattr_t *) NULL);
 
-  // Inicializo la variable de condición
+  // Inicializo las variables de condición
   pthread_condattr_t __condattr;
   pthread_condattr_init(&__condattr);
   pthread_cond_init( &hay_alumnos_libres, &__condattr );
+  pthread_condattr_init(&__condattr);
+  pthread_cond_init( &hay_rescatistas_libres, &__condattr );
 
   for ( ;; )
   {
