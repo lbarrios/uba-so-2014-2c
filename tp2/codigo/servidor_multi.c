@@ -286,9 +286,14 @@ void* atendedor_de_alumno( int socket_fd, t_aula* el_aula )
 	return NULL;
 }
 
+/**
+ * Esta función se va a encargar de llamar a la función
+ * atendedor de alumno, pasandole los parámetros correspondientes.
+ * Recibe un struct de parámetros y luego se tiene que encargar
+ * de liberar la memoria correspondiente.
+ */
 void wrap_atendedor_de_alumno( Params* params )
 {
-  //Params* params = ( Params* )params_ptr;
   atendedor_de_alumno( params->socket_fd, params->el_aula );
   free( params );
 }
@@ -320,17 +325,14 @@ int main( void )
   {
     perror( "escuchando" );
   }
-
-  t_aula el_aula;
-  t_aula_iniciar_vacia( &el_aula );
   /// Aceptar conexiones entrantes.
   socket_size = sizeof( remoto );
 
-  pthread_attr_t attr; //< Acá voy a guardar la configuración para crear el thread
-  // Inicializo la configuración por defecto
-  pthread_attr_init( &( attr ) );
+  t_aula el_aula; t_aula_iniciar_vacia( &el_aula );
 
-  
+  pthread_attr_t attr; //< Acá voy a guardar la configuración para crear el thread
+  pthread_attr_init( &( attr ) ); //< Inicializo la configuración por defecto
+
   // Inicializo el mutex para la variable de condición
   pthread_mutex_init( &hay_alumnos_libres_mutex, (const pthread_mutexattr_t *) NULL );
   pthread_mutex_init( &hay_rescatistas_libres_mutex, (const pthread_mutexattr_t *) NULL);
@@ -355,7 +357,7 @@ int main( void )
     }
     else
     {
-      pthread_t tid; //< Acá voy a guardar el Thread-ID
+      //pthread_t tid; //< Acá voy a guardar el Thread-ID
       // Reservo memoria para el struct que contiene los parámetros que va a recibir el thread
       Params* params = ( Params* ) malloc( sizeof( Params ) );
       {
@@ -363,14 +365,19 @@ int main( void )
         params->el_aula = &el_aula; //< También recibe una referencia al aula
       }
       // Creo el thread
+      /*
       pthread_create( &( tid ), //< Puntero a int donde se va a guardar el thread-id
                       &( attr ), //< Puntero a atributos
                       ( void (*))( void* ) wrap_atendedor_de_alumno, //< Puntero a función que va a correr el thread
                       ( void* ) params ); //< Puntero a un struct que contiene los parámetros
+      */
     }
   }
 
   // Elimino la configuración (el manual dice que es importante hacerlo)
   pthread_attr_destroy( &( attr ) );
+
+  // ¿Hay que correr pthread_condattr_destroy?
+  //pthread_condattr_destroy
   return 0;
 }

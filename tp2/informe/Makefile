@@ -6,7 +6,7 @@ TARGET= informe.df
 all: informe.pdf
 
 # El latex se compila dos veces seguidas, la primera es para que se arme bien el índice.
-TEX_PARAMS= -interaction=nonstopmode
+TEX_PARAMS= -interaction=nonstopmode --shell-escape
 informe.pdf: informe.tex
 	( pdflatex $(TEX_PARAMS) informe.tex &&\
 	pdflatex $(TEX_PARAMS) informe.tex ) || (echo 'ERROR.'&&rm informe.pdf)

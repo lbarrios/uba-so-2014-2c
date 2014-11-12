@@ -81,15 +81,34 @@ que tarda cada rescatista tarde en colocar una máscara a una persona.
 \subsection{Escalamiento}
 %% Analizar solución entregada
 %% Proponer mejoras de software y hardware
-La limitación más evidente es que, con la implementación actual, cada thread mantiene ocupado un puerto local. Dado que el número de puerto es un \texttt{unsigned short}, la cantidad total de puertos es 65536. Luego, estamos lejos de poder atender 1000000 de clientes.
+\centerbf{Cantidad de Puertos}
 
-En la mayoría de los servidores, se suele redirigir %completar
+La limitación más evidente es que, con la implementación actual, cada thread mantendría abierta una conexión local ocupando un puerto de origen distinto (todas con destino al puerto \texttt{5555}. Dado que el número de puerto es un \texttt{unsigned short}, la cantidad máxima de puertos es 65536. Por lo tanto, en estas condiciones estaríamos lejos de poder atender 1000000 de clientes.
 
+Verificamos la afirmación del párrafo anterior mediante la ejecución del comando \texttt{netstat -tupaln}. Se adjunta a continuación un output de ejemplo, para 30 clientes.
+
+\lstinputlisting[language=bash,basicstyle=\scriptsize,emph={tcp},keywordstyle=\color{blue},stringstyle=\color{red},tabsize=2,caption=netstat -tupaln]{netstat.txt}
+
+En un sistema en donde los clientes se conecten desde distintas IPS, este factor no representaría necesariamente una limitación, ya que cada cliente utilizaría el puerto que tuviera disponible (el servidor siempre utiliza el puerto 5555).
+
+\centerbf{Recursos del sistema}
 Ya que la creación de un thread consume cierta cantidad de recursos, una decisión posible es tener un \textit{pool} de threads creados al inicializar el servidor.
 
-Una una consideración importante es que, al tener tantos threads, se les otorga $quantum$ de procesador con cada vez menor frecuencia. Dada la urgencia la evacuación, el $turnaround$ puede ser muy alto para ser factible. La persona podría estar esperando mucho tiempo sin recibir indicaciones de como moverse. La mejora propuesta, en este caso, es de hardware, y consiste en aumentar la cantidad de procesadores.
+Una primera consideración es que, al crecer la cantidad threads, se les otorga \emph{quantum} de procesador con cada vez menor frecuencia. Dada la urgencia de la evacuación, el \emph{turnaround} puede ser muy alto para ser factible. La persona podría estar esperando mucho tiempo sin recibir respuesta por parte del servidor. La mejora propuesta, en este caso, es de hardware, y consiste en aumentar la cantidad de recursos.
 
-% considerar memoria de tener threads
+El segundo aspecto a tener en cuenta, es la cantidad de memoria que ocupa cada \emph{Thread}. En un acercamiento experimental lanzamos el servidor con 1000 clientes, y verificamos la cantidad de memoria ocupada del sistema operativo antes de lanzar la prueba (1GB), y luego de que se abrieran todas las conexiones (4GB). La diferencia, 3GB, dividido 1000, la cantidad de clientes, da una cantidad de memoria de aproximadamente 3MB por thread.
+
+Hay que tener en cuenta que en el análisis anterior se tomó la memoria del servidor, y la que ocupa cada cliente que se conecta, ya que todo el test corrió localmente. Intentamos realizar el test en forma remota, y por alguna razón (a pesar de que los clientes abrían la conexión correctamente) no logramos hacer que ninguno de los clientes se muevan.
+
+Intentamos entonces realizar un monitoreo exhaustivo de la memoria ocupada por el proceso \texttt{server\_multi}, junto con sus threads, a través de \texttt{ps}, \texttt{top / htop}, \texttt{valgrind}, pero al parecer el sistema operativo no brinda fácilmente esa información, ya que en todos los casos la memoria del proceso particular se mantenía constante luego de haber abierto cientos de conexiones (y por consiguiente, cientos de threads).
+
+Bajo las consideraciones anteriores, asumimos entonces que necesitaríamos un máximo aproximado de 3MB por thread. En un servidor con 1 millón de clientes conectados al mismo tiempo, esto se traduce en 3TB de memoria, una cantidad que, si bien es inmensa, sigue siendo razonable en un entorno de \texttt{supercomputadora}.
+
+Asumiendo que no estamos utilizando una supercomputadora, podemos pensar en una solución basada en un \texttt{pool de threads}. Esto es, a grandes rasgos, una estructura (ejemplo, un arreglo) de threads de cantidad fija o dinámica. A su vez, se mantiene una cola de tareas a ejecutar, las cuales se van asignando a los threads del \texttt{pool} a medida que estos se van liberando. Este modelo se complementa bien con nuestra implementación, ya que se basa en que cada thread del pool es un worker, lo mismo que ya ocurre con nuestra versión del servidor multithread. La versión más básica de un pool de threads mantiene siempre una cantidad fija de threads. Esto puede ser perjudicial, por ejemplo, si hay muy pocos threads efectivamente en uso (ej, pocas conexiones) estamos desperdiciando memoria y recursos para mantener muchos threads que no se están usando. Si por el contrario hay demasiados clientes, vamos a tener muchos threads ocupados constantemente. Suponiendo que la cantidad de clientes pueda variar inesperadamente, o que respete cierto patrón, otra posibilidad es utilizar una cantidad de threads dinámica, de forma tal que el servidor pueda realizar un autoescalamiento en la medida que le lleguen muchos clientes (y se mantengan en el tiempo), y que en el caso de que la cantidad de clientes descienda drásticamente pueda liberar los recursos utilizados por los threads que se encuentran disponibles.
+
+% considerar memoria de tener threads: ver http://stackoverflow.com/questions/7235934/pthreads-high-memory-usage
+
+% la idea del thread pool: http://en.wikipedia.org/wiki/Thread_pool_pattern
 
 
 \newpage
