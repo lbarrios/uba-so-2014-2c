@@ -61,7 +61,7 @@ class Cliente:
 			
 		self.framer.send(direc)
 		response = self.framer.receive()
-		time.sleep(0.5)
+		time.sleep(2.5)
 		print("Respuesta: <"+ response+ ">")
 		if response == "OK":
 			self.posicion = (self.posicion[0] + next[0], self.posicion[1] + next[1])
