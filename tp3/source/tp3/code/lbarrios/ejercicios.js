@@ -39,7 +39,8 @@ var m = function() {
 var r = function(key, values) {
 	return Array.sum(values);
 }
-db.posts.mapReduce(m,r,{out:"ej3",limit:10});
+//db.posts.find().sort({"score":-1}).limit(10);
+db.posts.mapReduce(m,r,{out:"ej3",sort:{"score":1},limit:10});
 //db.posts.mapReduce(m,r,{out:"ej3",sort:{"score":-1},limit:10});
 
 db.runCommand({mapReduce: db.posts,
