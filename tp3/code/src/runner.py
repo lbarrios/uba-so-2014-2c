@@ -8,7 +8,7 @@ import argparse
 conn = MongoClient()
 db = conn.reddit
 
-EJS_DIRS = ['ej1']
+EJS_DIRS = ['ej-Ejemplo']
 
 def run(code, incoll = 'posts', outcoll = 'default'):
     print "Corriendo map_reduce sobre %s.%s" % ("reddit", incoll)
@@ -25,7 +25,7 @@ def run(code, incoll = 'posts', outcoll = 'default'):
                 reduce_func = Code(reduce_func_file.read())
                 collection.map_reduce(map_func, reduce_func, outcoll, finalize = finalize_func)
         print "\tEl resultado de la operacion se encuentra almacenado en la colleccion %s." % outcoll
-     
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -39,8 +39,3 @@ scripts de map y reduce, default corre todo los directorios ejx")
     args = parser.parse_args()
 
     run(args.code, args.incoll, args.outcoll)
-
- 
-
-
-

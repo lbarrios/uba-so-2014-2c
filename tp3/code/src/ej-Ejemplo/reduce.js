@@ -1,4 +1,3 @@
-function (key, values){
+function (key, values) {
     return Array.sum(values);
 }
-  
