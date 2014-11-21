@@ -1,0 +1,53 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% General config
+% \title{TP1 Sistemas Operativos}
+% \author{Pedro Rodriguez, Gonzalo Benegas, Leandro Ezequiel Barrios}
+% \date{\today}
+% \makeindex
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Paragraph config
+\setlength{\parindent}{1cm}
+\setlength{\parskip}{5mm plus4mm minus2mm}
+% Paragraph Titles (titlesec)
+\titleformat{\section}{\LARGE\bfseries\centering}{Parte \Roman{section}}{1em}{}
+\titlespacing*{\section}{0pt}{3.25ex plus 1ex minus .2ex}{0.5em}
+\titleformat{\subsection}{\Large\bfseries}{\thesubsection}{1em}{}
+\titlespacing*{\subsection}{0pt}{3.25ex plus 1ex minus .2ex}{2em}
+\titleformat{\subsubsection}{\large\bfseries}{\thesubsubsection}{1em}{}
+\titlespacing*{\subsubsection}{0pt}{3.25ex plus 1ex minus .2ex}{2em}
+\titleformat{\paragraph}[hang]{\centering\normalsize\bfseries}{\theparagraph}{1em}{}
+\titlespacing*{\paragraph}{0pt}{5.25ex plus 1ex minus .2ex}{1em}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Figure config
+\renewcommand{\thefigure}{\thesubsection.\arabic{figure}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% specialize \ref command
+\newcommand{\eq}[1]{\textit{Ecuación \eqref{eq:#1}}}
+\newcommand{\fref}[1]{\textit{Función \eqref{func:#1}}}
+\newcommand{\alg}[1]{\textit{Algoritmo \ref{alg:#1}}}
+\newcommand{\fig}[1]{\textbf{\textit{Figura \ref{fig:#1}}}}
+\newcommand{\bib}[1]{\cite{bib:#1}}
+\newcommand{\bibext}[2]{\cite[#2]{#1}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% "This page intentionally left blank"
+% https://gist.github.com/philipptempel/5220000
+\def\cleardoublepage{\clearpage%
+    \if@twoside
+        \ifodd\c@page\else
+            \vspace*{\fill}
+            \hfill
+            \begin{center}
+            Esta página fue dejada en blanco intencionalmente.
+            \end{center}
+            \vspace{\fill}
+            \thispagestyle{empty}
+            \newpage
+            \if@twocolumn\hbox{}\newpage\fi
+        \fi
+    \fi
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\centerbf}[1]{\begin{center}\textbf{#1}\end{center}}
