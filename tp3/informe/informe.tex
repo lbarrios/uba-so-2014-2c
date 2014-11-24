@@ -8,45 +8,252 @@
 % -- Carátula --
 \clearpage{\pagestyle{empty}\input{caratula}}
 
+\newpage
+\input{introduccion}
+
 %-- Índice --
 \clearpage{%
   \pagestyle{empty}\tableofcontents%
   \vspace{3cm}%
-  \begin{abstract}
-    Hoy en día, la globalización y creciente utilización mundial masiva de medios de
-    información como la internet, ha impulsado la existencia de  gigantes de la
-    información. Ejemplos de estos son empresas como Facebook, Yahoo!, Google,
-    Twitter y otros. La mayor parte del servicio provisto por estas empresas a sus
-    usuarios, consiste y necesita de la utilización, procesamiento y análisis de
-    grandes bases de datos. Por ello, una de las más frecuentes acciones que deben
-    ser efectuadas es el filtrado de datos y su posterior procesamiento.
-
-    Un método comúnmente utilizado dentro del entorno de procesamiento de datos a
-    través de clusters es el \textbf{MapReduce}, creado por la empresa Google. Este
-    permite analizar un gran conjunto de datos, relacionándolos a través de un
-    índice (\emph{key}) a través de una operación \texttt{map}, para luego operar
-    sobre los conjuntos de valores asociados a cada \emph{key} a través de una
-    operación \texttt{reduce}. Opcionalmente, es posible aplicar al conjunto de
-    datos producido por \texttt{reduce}, una última operación \texttt{finalize}.
-
-    Considerando la inmensidad del volumen de información con el que se trabaja, y
-    el gran costo económico que implican la fabricación y el funcionamiento de los
-    servidores adecuados para manipularla, es importante lograr el máximo
-    aprovechamiento de los recursos computacionales de los que estas empresas
-    disponen. Por ello, se intenta trabajar con la máxima eficiencia algorítmica,
-    temporal y de espacio posibles.
-  \end{abstract}
-  \cleardoublepage%
+  %\begin{abstract}
+  %\end{abstract}
+  \clearpage%
 }
 %-- A partir de aquí, pongo el contador de páginas en 1 --
 \setcounter{page}{1}
 
-
-
 \index{Implementación de Map-Reduce}
 \section{Implementación de Map-Reduce}
-\clearpage
 
+\subsection{Encontrar el subreddit con mayor score promedio}
+
+\begin{figure}[H]
+\centering
+\begin{verbatim}
+function () {
+    emit(this.subreddit, { count: 1, sum: this.score} );
+}
+\end{verbatim}
+\caption{La función \texttt{map}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{verbatim}
+function (key, values) {
+    reducedVal = {count: 0, sum: 0};
+    for (var i = 0; i < values.length; i++) {
+        reducedVal.count += values[i].count;
+        reducedVal.sum += values[i].sum;
+    };
+    return reducedVal;
+}
+\end{verbatim}
+\caption{La función \texttt{reduce}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{verbatim}
+function finalize (key, reducedVal) {
+    return reducedVal.sum / reducedVal.count;
+}
+\end{verbatim}
+\caption{La función \texttt{finalize}}
+\end{figure}
+
+Ejecutamos el query y utilizamos la función \texttt{sort} en la consola de Mongo. El subreddit $GirlGamers$ tiene el mayor score promedio: 2483.
+
+\newpage
+\subsection{Encontrar los doce títulos con mayor score de la colección de posts con al menos 2000 votos.}
+
+\begin{figure}[H]
+\centering
+\begin{verbatim}
+function () {
+    if (this.total_votes >= 2000)
+        emit(this.title, this.total_votes);
+}
+\end{verbatim}
+\caption{La función \texttt{map}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{verbatim}
+function (key, values) {
+    return Array.sum(values);
+}
+\end{verbatim}
+\caption{La función \texttt{reduce}}
+\end{figure}
+
+Luego se ordenaron los resultados. Los doce títulos con mayor score de la colección de posts con al menos 2000 votos son:
+
+\begin{verbatim}
+"Airline screwed up, a friend just posted this on Facebook.": 177103
+"Following the Obama AMA": 144145
+"Nailed it.": 129307
+"Help a brother out!": 129183
+"Seen in NJ, what a friendly neighbor": 126222
+"McKayla Maroney visits the White House... her picture with the President": 120929
+"The Bus Knight": 119774
+"Brilliant and thoughtful parents handed these out to everyone on my flight.": 119232
+"Screenshot of reddit from the year 3012": 118866
+"Standing guard, hurricane or otherwise": 117272
+"My neighbors are taking this especially hard.": 117101
+"When I found out I could upvote by pressing 'A'": 115717
+\end{verbatim}
+
+\newpage
+\subsection{Para los diez mejores scores, calcular la cantidad de comentarios en promedio por sumisión.}
+
+\begin{figure}[H]
+\centering
+\begin{verbatim}
+function () {
+    emit(this.score, {count: 1, sum: this.number_of_comments});
+}
+\end{verbatim}
+\caption{La función \texttt{map}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{verbatim}
+function (key, values) {
+    reducedVal = {count: 0, sum: 0};
+    for (var i = 0; i < values.length; i++) {
+        reducedVal.count += values[i].count;
+        reducedVal.sum += values[i].sum;
+    };
+    return reducedVal;
+}
+\end{verbatim}
+\caption{La función \texttt{reduce}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{verbatim}
+function finalize (key, reducedVal) {
+    return reducedVal.sum / reducedVal.count;
+}
+\end{verbatim}
+\caption{La función \texttt{finalize}}
+\end{figure}
+
+Los resultados se ordenaron. Los diez mejores scores y la cantidad de comentarios en promedio por sumisión son:
+
+\begin{verbatim}
+20570: 1463
+12333: 1612
+11908: 2681
+10262: 1514
+8935: 480
+8835: 1716
+8699: 934
+8241: 571
+7297: 1110
+6741: 2204
+\end{verbatim}
+
+\subsection{Entre los usuarios con a la sumo 5 sumisiones, encontrar el que posea mayor cantidad de upvotes.}
+
+\begin{figure}[H]
+\centering
+\begin{verbatim}
+function () {
+    emit(this.username, {sumisiones: 1, number_of_upvotes: this.number_of_upvotes});
+}
+\end{verbatim}
+\caption{La función \texttt{map}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{verbatim}
+function (key, values) {
+    var res = {sumisiones: 0, number_of_upvotes: 0};
+    for (var i = 0; i < values.length; i++) {
+        var val = values[i];
+        res.sumisiones += val.sumisiones;
+        res.number_of_upvotes += val.number_of_upvotes;
+    }
+    return res;
+}
+\end{verbatim}
+\caption{La función \texttt{reduce}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{verbatim}
+function finalize (key, reducedVal) {
+    if (reducedVal.sumisiones <= 5)
+        return reducedVal.number_of_upvotes;
+}
+\end{verbatim}
+\caption{La función \texttt{finalize}}
+\end{figure}
+
+Los resultados se ordenaron. El usuario con a lo sumo cinco sumisiones ya la mayor cantidad de upvotes es ``lepry'', con 90396 upvotes.
+
+\newpage
+\subsection{Para todos los subrredit que poseen un score ente 280 y 300, indicar la cantidad palabras
+presentes en sus títulos}
+
+\begin{figure}[H]
+\centering
+\begin{verbatim}
+function () {
+    var cantPalabras = this.title.split(' ').length;
+    emit(this.subreddit, {score: this.score, cantPalabras: cantPalabras});
+}
+\end{verbatim}
+\caption{La función \texttt{map}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{verbatim}
+function (key, values) {
+    var res = {score: 0, cantPalabras: 0};
+    for (var i = 0; i < values.length; i++) {
+        var val = values[i];
+        res.score += val.score;
+        res.cantPalabras += val.cantPalabras;
+    }
+    return res;
+}
+\end{verbatim}
+\caption{La función \texttt{reduce}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{verbatim}
+function finalize (key, reducedVal) {
+    if (280 <= reducedVal.score && reducedVal.score <= 300)
+        return reducedVal.cantPalabras;
+}
+\end{verbatim}
+\caption{La función \texttt{finalize}}
+\end{figure}
+
+Los únicos resultados arrojados fueron:
+\begin{verbatim}
+"Firearms": 24
+"anime": 18
+"Sexy": 13
+"Feminism": 6
+"HeroesofNewerth": 6
+"TheRealZachAnner": 4
+"ragecomics": 4
+"xkcd": 4
+\end{verbatim}
+
+\clearpage
 \index{Investigación}
 \section{Investigación}
 Para esta parte del TP se pide leer e interpretar el paper <<\textbf{Job
@@ -148,7 +355,7 @@ implementación básica está fuertemente ligada a este proyecto. La primer
 solución al conflicto del scheduling, se encuentra provista por defecto dentro
 la propia implementación de Hadoop, y consta de una cola \texttt{FIFO} de 5
 niveles de prioridad, de forma tal que cada vez que un slot se libera, el
-scheduler lo asigna a la más prioritaria de entre las tareas pendientes. 
+scheduler lo asigna a la más prioritaria de entre las tareas pendientes.
 
 Sobre este enfoque, Hadoop aplica una \texttt{optimización de localidad}, al
 igual que lo hace MapReduce de Google: dado que una tarea generalmente consta de
@@ -163,7 +370,7 @@ racks remotos.
 La gran desventaja del scheduler \texttt{FIFO} es el pésimo tiempo de respuesta
 para trabajos pequeños cuando se encuentran intercalados con trabajos grandes.
 Por ello, la primer solución que se implementó, es el mecanismo denominado
-\textbf{Hadoop On Demand (HOP)}. Este 
+\textbf{Hadoop On Demand (HOP)}. Este
 
 \clearpage
 \subsection {\footnotesize Explique otros problemas asociados a la búsqueda de una mejor solución}
@@ -185,6 +392,6 @@ Por ello, la primer solución que se implementó, es el mecanismo denominado
 \subsection {\footnotesize Conclusiones}
 \label{investigacion-9}
 
-\clearpage  
+\clearpage
 
 \end{document}
