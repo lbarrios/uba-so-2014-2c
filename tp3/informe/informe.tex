@@ -389,11 +389,7 @@ en cualquier momento, y tener un tiempo de respuesta \textbf{aceptable}. Con
 la implementación del Scheduler FIFO de Hadoop, esto se volvía imposible,
 reduciendo significativamente la utilidad del sistema.
 
-\fixme
-
-
 \clearpage
-
 
 \subsection {\footnotesize Comente el background histórico del problema}
 \label{investigacion-4}
@@ -417,9 +413,9 @@ racks remotos.
 La gran desventaja del scheduler \texttt{FIFO} es el pésimo tiempo de respuesta
 para trabajos pequeños cuando se encuentran intercalados con trabajos grandes.
 Por ello, la primer solución que se implementó, es el mecanismo denominado
-\textbf{Hadoop On Demand (HOP)}.
-
-\fixme
+\textbf{Hadoop On Demand (HOD)}. Sin embargo, este mecanismo también ocasionó
+problemas, principalmente \textbf{baja localidad de los datos} y \textbf{baja
+utilización de los recursos},
 
 \clearpage
 \subsection {\footnotesize Explique otros problemas asociados a la búsqueda de una mejor solución}
@@ -524,6 +520,33 @@ descartar todos los datos de uno o varios \texttt{jobs}.
 \clearpage
 \subsection {\footnotesize Explique las soluciones propuestas}
 \label{investigacion-6}
+
+Para solucionar todos los inconvenientes descriptos, el paper propone un
+mecanismo de Scheduling que autodenominan \texttt{FAIR}. Este mecanismo está
+ideado para cumplir principalmente con dos características:
+
+\begin{itemize}
+    \item \textbf{Aislamiento}: brindarle a cada usuario la ilusión de estar
+    corriendo un cluster privado.
+    \item \textbf{Multiplexado Estadístico}: redistribuír en tiempo de ejecución
+    los recursos no utilizados.
+\end{itemize}
+
+Para lograr estos objetivos, se implementaron dos mecanismos:
+
+\textbf{Delay Scheduling}: para solucionar los \texttt{problemas de localidad de
+datos}. Para ello, cuando un \texttt{job} se encuentra en condiciones de que le
+sean asignados \texttt{slots}, el Scheduler se fija si este contiene
+\texttt{tasks} aptas para correr localmente en alguno de los \texttt{nodos} que
+tienen \texttt{slots disponibles}. En el caso en que esto no suceda, se lo
+saltea hasta encontrar algún \texttt{job} que contenta \texttt{tasks}
+apropiados. Para evitar \textbf{starvation}, se implementa un mecanismo de
+\textbf{timeout} mediante el cual, luego de transcurrido ese tiempo sin que le
+sean asignados \texttt{slots libres}, a un \texttt{job} se le permite correr
+tareas, aun cuando estas sean en forma no-local.
+
+\textbf{Copy-Compute Splitting}: para solucionar los \texttt{problemas de
+interdependencia}.
 
 \clearpage
 \subsection {\footnotesize Evalúe soluciones propuestas}
