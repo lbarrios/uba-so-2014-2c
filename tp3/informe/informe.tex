@@ -27,17 +27,22 @@
 
 \subsection{Encontrar el subreddit con mayor score promedio}
 
+
 \begin{figure}[H]
-\centering
+  \caption{La función \texttt{map}}
+  \centering
 \begin{verbatim}
 function () {
     emit(this.subreddit, { count: 1, sum: this.score} );
 }
 \end{verbatim}
-\caption{La función \texttt{map}}
+
 \end{figure}
 
+La función $map$ se aplica a cada post y emite, con el $subreddit$ como key, una tupla con la cantidad de posts - inicializada en 1 - y la suma de los scores -- inicializada con el score del post.
+
 \begin{figure}[H]
+\caption{La función \texttt{reduce}}
 \centering
 \begin{verbatim}
 function (key, values) {
@@ -49,18 +54,22 @@ function (key, values) {
     return reducedVal;
 }
 \end{verbatim}
-\caption{La función \texttt{reduce}}
 \end{figure}
 
+Tras aplicar la función $map$ quedan asociados cada subreddit con una lista de las tuplas asociados a los posts del subreddit. La función $reduce$ toma un fragmento de esta lista y la reduce en una sola tupla que acumula la cantidad de posts y la suma de los scores.
+
+
 \begin{figure}[H]
+\caption{La función \texttt{finalize}}
 \centering
 \begin{verbatim}
 function finalize (key, reducedVal) {
     return reducedVal.sum / reducedVal.count;
 }
 \end{verbatim}
-\caption{La función \texttt{finalize}}
 \end{figure}
+
+Luego de la etapa de $reduce$, quedan asociados cada subreddit con su cantidad de posts y su suma de scores. La función $finalize$ calcula el promedio final realizando una división.
 
 Ejecutamos el query y utilizamos la función \texttt{sort} en la consola de Mongo. El subreddit $GirlGamers$ tiene el mayor score promedio: 2483.
 
@@ -68,6 +77,7 @@ Ejecutamos el query y utilizamos la función \texttt{sort} en la consola de Mong
 \subsection{Encontrar los doce títulos con mayor score de la colección de posts con al menos 2000 votos.}
 
 \begin{figure}[H]
+\caption{La función \texttt{map}}
 \centering
 \begin{verbatim}
 function () {
@@ -75,21 +85,23 @@ function () {
         emit(this.title, this.total_votes);
 }
 \end{verbatim}
-\caption{La función \texttt{map}}
 \end{figure}
 
+Se emiten, para todos los posts con al menos 2000 votos, su título y su cantidad de votos.
+
 \begin{figure}[H]
+\caption{La función \texttt{reduce}}
 \centering
 \begin{verbatim}
 function (key, values) {
     return Array.sum(values);
 }
 \end{verbatim}
-\caption{La función \texttt{reduce}}
 \end{figure}
 
-Luego se ordenaron los resultados. Los doce títulos con mayor score de la colección de posts con al menos 2000 votos son:
+Para cada título, se suman los votos de sus posts.
 
+Tras ejecutar el query, se ordenaron los resultados. Los doce títulos con mayor score de la colección de posts con al menos 2000 votos son:
 
 \begin{center}
   \begin{tabular}{l|c}
@@ -114,17 +126,20 @@ Luego se ordenaron los resultados. Los doce títulos con mayor score de la colec
 \newpage
 \subsection{Para los diez mejores scores, calcular la cantidad de comentarios en promedio por sumisión.}
 
+Este ejercicio se resuelve de manera análoga al ejercicio 1.
+
 \begin{figure}[H]
+\caption{La función \texttt{map}}
 \centering
 \begin{verbatim}
 function () {
     emit(this.score, {count: 1, sum: this.number_of_comments});
 }
 \end{verbatim}
-\caption{La función \texttt{map}}
 \end{figure}
 
 \begin{figure}[H]
+\caption{La función \texttt{reduce}}
 \centering
 \begin{verbatim}
 function (key, values) {
@@ -136,23 +151,22 @@ function (key, values) {
     return reducedVal;
 }
 \end{verbatim}
-\caption{La función \texttt{reduce}}
 \end{figure}
 
 \begin{figure}[H]
+\caption{La función \texttt{finalize}}
 \centering
 \begin{verbatim}
 function finalize (key, reducedVal) {
     return reducedVal.sum / reducedVal.count;
 }
 \end{verbatim}
-\caption{La función \texttt{finalize}}
 \end{figure}
 
 Los resultados se ordenaron. Los diez mejores scores y la cantidad de comentarios en promedio por sumisión son:
 
 \begin{center}
-  \begin{tabular}{c|c}
+  \begin{tabular}{l|c}
     %\hline
     \textbf{Score} & \textbf{Comentarios en promedio} \\ \hline
     20570 & 1463 \\
@@ -170,17 +184,20 @@ Los resultados se ordenaron. Los diez mejores scores y la cantidad de comentario
 
 \subsection{Entre los usuarios con a la sumo 5 sumisiones, encontrar el que posea mayor cantidad de upvotes.}
 
+Este ejercicio se resuelve de forma similar al ejercicio 1, salvo que en la función $finalize$ se filtran los usuarios con más de 5 sumisiones.
+
 \begin{figure}[H]
+\caption{La función \texttt{map}}
 \centering
 \begin{verbatim}
 function () {
     emit(this.username, {sumisiones: 1, number_of_upvotes: this.number_of_upvotes});
 }
 \end{verbatim}
-\caption{La función \texttt{map}}
 \end{figure}
 
 \begin{figure}[H]
+\caption{La función \texttt{reduce}}
 \centering
 \begin{verbatim}
 function (key, values) {
@@ -193,10 +210,10 @@ function (key, values) {
     return res;
 }
 \end{verbatim}
-\caption{La función \texttt{reduce}}
 \end{figure}
 
 \begin{figure}[H]
+\caption{La función \texttt{finalize}}
 \centering
 \begin{verbatim}
 function finalize (key, reducedVal) {
@@ -204,16 +221,18 @@ function finalize (key, reducedVal) {
         return reducedVal.number_of_upvotes;
 }
 \end{verbatim}
-\caption{La función \texttt{finalize}}
 \end{figure}
 
 Los resultados se ordenaron. El usuario con a lo sumo cinco sumisiones ya la mayor cantidad de upvotes es ``lepry'', con 90396 upvotes.
 
 \newpage
-\subsection{Para todos los subrredit que poseen un score ente 280 y 300, indicar la cantidad palabras
-presentes en sus títulos}
+\subsection{Para todos los subrredit que poseen un score entre 280 y 300, indicar la cantidad palabras
+presentes nnen sus títulos}
+
+Este ejercicio se resuelve de forma similar al ejercicio 1, salvo que en la función $finalize$ se filtran los subreddit cuyo score no se encuentra en el intervalo [280,300].
 
 \begin{figure}[H]
+\caption{La función \texttt{map}}
 \centering
 \begin{verbatim}
 function () {
@@ -221,10 +240,10 @@ function () {
     emit(this.subreddit, {score: this.score, cantPalabras: cantPalabras});
 }
 \end{verbatim}
-\caption{La función \texttt{map}}
 \end{figure}
 
 \begin{figure}[H]
+\caption{La función \texttt{reduce}}
 \centering
 \begin{verbatim}
 function (key, values) {
@@ -237,10 +256,10 @@ function (key, values) {
     return res;
 }
 \end{verbatim}
-\caption{La función \texttt{reduce}}
 \end{figure}
 
 \begin{figure}[H]
+\caption{La función \texttt{finalize}}
 \centering
 \begin{verbatim}
 function finalize (key, reducedVal) {
@@ -248,7 +267,6 @@ function finalize (key, reducedVal) {
         return reducedVal.cantPalabras;
 }
 \end{verbatim}
-\caption{La función \texttt{finalize}}
 \end{figure}
 
 

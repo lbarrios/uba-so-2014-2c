@@ -19,3 +19,8 @@ build/
 #################
 *.sublime-project
 *.sublime-workspace
+
+# NFS temporary Files #
+#######################
+*.nfs*
+
