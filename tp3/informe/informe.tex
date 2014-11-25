@@ -457,6 +457,9 @@ pequeños, los cuales suelen ser justamente los que más necesidad de
 
 \textbf{Sticky Slots}:
 
+Este problema puede aparecer incluso con jobs de tamaño grande. Se puede entender con el siguiente ejemplo.
+Tenemos 10 jobs con 10 tasks corriendo cada uno. En cuanto un job termina un task, se debe determinar a quién asignar el slot libre. Como esta tarea tiene 9 tasks corriendo y el resto 10, según el fair scheduling se le asigna a la misma tarea. Como consecuencia de este comportamiento, los jobs nunca abandonan sus slots originales. Entonces, si tenía baja localidad inicialmente, la sigue manteniendo hasta el final.
+
 Problemas asociados a la Interdependencia de Map-Reduce:
 
 
