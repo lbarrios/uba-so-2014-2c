@@ -9,6 +9,7 @@
 *.ind
 *.idx
 *.toc
+*.synctex.gz
 
 # Build temporary folder #
 ##########################
