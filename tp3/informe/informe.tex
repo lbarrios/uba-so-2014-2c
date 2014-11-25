@@ -92,7 +92,7 @@ Luego se ordenaron los resultados. Los doce títulos con mayor score de la colec
 
 
 \begin{center}
-  \begin{tabular}{c|c}
+  \begin{tabular}{l|c}
     %\hline
     \textbf{Título} & \textbf{Score} \\ \hline
     ``Airline screwed up, a friend just posted this on Facebook.'' & 177103 \\
@@ -255,7 +255,7 @@ function finalize (key, reducedVal) {
 Los únicos resultados arrojados fueron:
 
 \begin{center}
-  \begin{tabular}{c|c}
+  \begin{tabular}{l|c}
     %\hline
     \textbf{Subreddit} & \textbf{Palabras en títulos} \\ \hline
     ``Firearms'' & 24 \\
@@ -363,7 +363,20 @@ pueden ser liberados hasta que el trabajo termine).
 \subsection {\footnotesize Identifique situaciones donde el problema se dispara y la consecuencias que esto genera.}
 \label{investigacion-3}
 
+Los problemas descriptos anteriormente se ponían en evidencia al momento de
+querer realizar queries \texttt{ad-hoc} de muy corta duración frente a los
+trabajos de producción que el warehouse debe correr periódicamente. Bajo esta
+perspectiva, era deseable que los trabajos experimentales puedan ser lanzados
+en cualquier momento, y tener un tiempo de respuesta \textbf{aceptable}. Con
+la implementación del Scheduler FIFO de Hadoop, esto se volvía imposible,
+reduciendo significativamente la utilidad del sistema.
+
+\fixme
+
+
 \clearpage
+
+
 \subsection {\footnotesize Comente el background histórico del problema}
 \label{investigacion-4}
 Hadoop está inspirado en el MapReduce de Google, por lo que gran parte de su
@@ -386,11 +399,33 @@ racks remotos.
 La gran desventaja del scheduler \texttt{FIFO} es el pésimo tiempo de respuesta
 para trabajos pequeños cuando se encuentran intercalados con trabajos grandes.
 Por ello, la primer solución que se implementó, es el mecanismo denominado
-\textbf{Hadoop On Demand (HOP)}. Este
+\textbf{Hadoop On Demand (HOP)}.
+
+\fixme
 
 \clearpage
 \subsection {\footnotesize Explique otros problemas asociados a la búsqueda de una mejor solución}
 \label{investigacion-5}
+
+Para explicar el problema, es necesario ahondar un poco en los conceptos
+utilizados en el paper. Se describe un \texttt{job} como un conjunto de
+\texttt{tasks}, siendo un task una operación \texttt{map-reduce}. Cada nodo
+(también llamados \texttt{slaves} o \texttt{workers}) tiene una determinada
+cantidad de \texttt{slots de ejecución}, y conforme estos se van liberando el
+Scheduler le va asignando \texttt{tasks}, siendo que cada uno de estos ocupa
+un \texttt{slot}.
+
+Problemas asociados a la Localidad de Datos:
+\textbf{Head-of-line scheduling}: Para explicar este concepto, el paper
+propone una métrica, \textbf{el porcentaje de localidad de un job en relación
+a su tamaño}. Utilizando esta métrica, dado un \texttt{job}, su porcentaje de
+localidad se ve representado por la cantidad de \texttt{nodos} en la que se
+encuentran distribuídos los datos de sus \texttt{tasks}, en relación al total.
+
+\textbf{Sticky Slots}:
+
+Problemas asociados a la Interdependencia de Map-Reduce:
+
 
 \clearpage
 \subsection {\footnotesize Explique las soluciones propuestas}
