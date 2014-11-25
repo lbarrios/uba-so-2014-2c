@@ -313,32 +313,7 @@ para analizar el contenido del paper. Estos son los siguientes:
 
 \ref{investigacion-8} Discusión
 
-El trabajo desarrollado en el paper consiste en encontrar un punto
-intermedio óptimo entre tener un cluster separado para cada usuario (
-que provee gran aislamiento pero una pobre utilización) y tener un único
-cluster FIFO (que provee gran utilización pero ningún tipo de 
-aislamiento entre usuarios). 
-
-Se identificaron dos aspectos en el manejo de un cluster de datos 
-intensivo que generan problemas: localidad de datos e interdependencia
-entre tareas. A pesar de que hasta aquí  todo giró en torno a MapReduce, estos 
-problemas son importantes en cualquier cluster de cómputos que utilize
-grafos dirigidos aciclicos de procesos para efectuar cómputos, ya que este
-tipo de sistema necesita colocar tareas en nodos que contienen sus inputs, y
-así correr el riesgo de encontrarse con problemas de los cuales ya hablamos,
-como por ejemplo \texttt{sticky slot}  y \texttt{head-of-line scheduling}.
-
 \ref{investigacion-9} Conclusiones
-
-A pesar de que MapReduce ha sido un modelo de ejecución muy popular y exitoso
-para largos \texttt{batch jobs}, muchas empresas han comenzado a compartir 
-sus clusters de MapReduce entre múltiples usuarios, corriendo así una mezcla
-de trabajos \texttt{batch} e \texttt{interactivos}. En el paper se propone
-FAIR, un scheduler justo que permite aislamiento entre usuarios, bajo tiempo
-de respuesta y alto \texttt{throughput}. Para lidiar con los problemas que este 
-scheduling genera (localidad de datos e interdependencia entre tareas), 
-se pueden emplear dos técnicas simples y robustas: delay scheduling y 
-copy-compute splitting.
 
 \clearpage
 \subsection {\footnotesize Explique cuál es el entorno y la situación donde se plantea el problema. (Motivación)}
@@ -499,8 +474,41 @@ liberó. Como consecuencia de este comportamiento, los \texttt{jobs} difícilmen
 abandonan sus \texttt{slots} originales. Entonces, si inicialmente este tenía
 baja \texttt{localidad}, la sigue manteniendo hasta el final.
 
-Problemas asociados a la Interdependencia de Map-Reduce:
+\centerbf{Problemas asociados a la Interdependencia de Map-Reduce}
 
+\textbf{Reduce Slot Hoarding}:
+
+Este problema está relacionado con la operación de \texttt{Reduce}. Para
+entenderlo, es necesario recordar brevemente qué es lo que hace una operación
+\texttt{Reduce}. Se compone básicamente de dos partes: Durante la primera fase,
+en donde predomina la característica antes presentada como \texttt{DATA-
+INTENSIVE}\footnote{Alta tasa de uso de Input/Output.}, se copian los datos
+emitidos por la función \texttt{Map}. Luego, en una segunda fase, caracterizada
+por ser \texttt{CPU-INTENSIVE}\footnote{Alta tasa de uso de CPU.}, se los
+procesan.
+
+También vale la pena mencionar que en el paper se hace distinción entre
+\texttt{Slot de Map} y \texttt{Slot de Reduce}, y que estos últimos se liberan
+sólamente cuando el \texttt{job} termina.
+
+Todo esto ocasiona principalmente dos complicaciones. Primero, una mala
+utilización de los \texttt{slots}: cuando un \texttt{job} se compone de miles de
+\texttt{tasks}, los \texttt{map} se van ejecutando a medida que se van liberando
+\texttt{slots de Map} en los \texttt{nodos}. Así, se va produciendo el output
+necesario para ser utilizado por \texttt{Reduce}. De esta forma, se comienzan a
+reservar slots para \texttt{Reduce}, los cuales serán ``brevemente'' utilizados
+para procesar los output de los map (se procesa un output por slot), y luego
+quedarán bloqueados hasta el momento en que el \texttt{job} finalice. 
+
+La segunda complicación tiene que ver con la mala administración de los recursos
+dentro de la misma operación de \texttt{Reduce}. Dado que la operación se
+compone de dos partes, en donde una hace un uso intensivo de los recursos de
+entrada/salida, y la otra hace un uso intensivo de la CPU, y que estos se
+producen en forma secuencial. Es fácil ver que en todo momento, en cada slot de
+\texttt{Reduce}, aun asumiendo una buena utilización desde el punto de vista del
+Scheduling, se va a estar realizando una operación de, o \texttt{Input/Ouput}, o
+\texttt{CPU}, una por vez, cuando en un escenario más eficiente se podrían estar
+utilizando ambas cosas a la vez.
 
 \clearpage
 \subsection {\footnotesize Explique las soluciones propuestas}
@@ -514,9 +522,34 @@ Problemas asociados a la Interdependencia de Map-Reduce:
 \subsection {\footnotesize Discusión}
 \label{investigacion-8}
 
+El trabajo desarrollado en el paper consiste en encontrar un punto
+intermedio óptimo entre tener un cluster separado para cada usuario (
+que provee gran aislamiento pero una pobre utilización) y tener un único
+cluster FIFO (que provee gran utilización pero ningún tipo de 
+aislamiento entre usuarios). 
+
+Se identificaron dos aspectos en el manejo de un cluster de datos 
+intensivo que generan problemas: localidad de datos e interdependencia
+entre tareas. A pesar de que hasta aquí  todo giró en torno a MapReduce, estos 
+problemas son importantes en cualquier cluster de cómputos que utilize
+grafos dirigidos aciclicos de procesos para efectuar cómputos, ya que este
+tipo de sistema necesita colocar tareas en nodos que contienen sus inputs, y
+así correr el riesgo de encontrarse con problemas de los cuales ya hablamos,
+como por ejemplo \texttt{sticky slot}  y \texttt{head-of-line scheduling}.
+
 \clearpage
 \subsection {\footnotesize Conclusiones}
 \label{investigacion-9}
+
+A pesar de que MapReduce ha sido un modelo de ejecución muy popular y exitoso
+para largos \texttt{batch jobs}, muchas empresas han comenzado a compartir 
+sus clusters de MapReduce entre múltiples usuarios, corriendo así una mezcla
+de trabajos \texttt{batch} e \texttt{interactivos}. En el paper se propone
+FAIR, un scheduler justo que permite aislamiento entre usuarios, bajo tiempo
+de respuesta y alto \texttt{throughput}. Para lidiar con los problemas que este 
+scheduling genera (localidad de datos e interdependencia entre tareas), 
+se pueden emplear dos técnicas simples y robustas: delay scheduling y 
+copy-compute splitting.
 
 \clearpage
 
