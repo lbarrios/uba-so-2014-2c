@@ -433,8 +433,13 @@ cantidad de \texttt{slots de ejecución}, y conforme estos se van liberando el
 Scheduler le va asignando \texttt{tasks}, siendo que cada uno de estos ocupa
 un \texttt{slot}. 
 
-Problemas asociados a la Localidad de Datos:
-\textbf{Head-of-line scheduling}: Para explicar este concepto, el paper propone
+\centerbf{Problemas asociados a la Localidad de Datos}
+
+% - HOL Scheduling
+
+\textbf{Head-of-line scheduling}: 
+
+Para explicar este concepto, el paper propone
 una métrica, \textbf{el porcentaje de localidad\footnote{En el paper se
 distingue entre localidad de nodo y localidad de rack; la idea sigue siendo la
 misma.} de un job en relación a su tamaño}. Utilizando esta métrica, dado un
@@ -454,6 +459,8 @@ Asi, dado un \texttt{nodo} cualquiera al que se le hayan liberado uno o más
 tamaño del \texttt{job}. Y esto ocasiona problemas en los \texttt{jobs}
 pequeños, los cuales suelen ser justamente los que más necesidad de
 \textbf{interactividad} tienen.
+
+% - Sticky slots
 
 \textbf{Sticky Slots}:
 
