@@ -313,7 +313,32 @@ para analizar el contenido del paper. Estos son los siguientes:
 
 \ref{investigacion-8} Discusión
 
+El trabajo desarrollado en el paper consiste en encontrar un punto
+intermedio óptimo entre tener un cluster separado para cada usuario (
+que provee gran aislamiento pero una pobre utilización) y tener un único
+cluster FIFO (que provee gran utilización pero ningún tipo de 
+aislamiento entre usuarios). 
+
+Se identificaron dos aspectos en el manejo de un cluster de datos 
+intensivo que generan problemas: localidad de datos e interdependencia
+entre tareas. A pesar de que hasta aquí  todo giró en torno a MapReduce, estos 
+problemas son importantes en cualquier cluster de cómputos que utilize
+grafos dirigidos aciclicos de procesos para efectuar cómputos, ya que este
+tipo de sistema necesita colocar tareas en nodos que contienen sus inputs, y
+así correr el riesgo de encontrarse con problemas de los cuales ya hablamos,
+como por ejemplo \texttt{sticky slot}  y \texttt{head-of-line scheduling}.
+
 \ref{investigacion-9} Conclusiones
+
+A pesar de que MapReduce ha sido un modelo de ejecución muy popular y exitoso
+para largos \texttt{batch jobs}, muchas empresas han comenzado a compartir 
+sus clusters de MapReduce entre múltiples usuarios, corriendo así una mezcla
+de trabajos \texttt{batch} e \texttt{interactivos}. En el paper se propone
+FAIR, un scheduler justo que permite aislamiento entre usuarios, bajo tiempo
+de respuesta y alto \texttt{throughput}. Para lidiar con los problemas que este 
+scheduling genera (localidad de datos e interdependencia entre tareas), 
+se pueden emplear dos técnicas simples y robustas: delay scheduling y 
+copy-compute splitting.
 
 \clearpage
 \subsection {\footnotesize Explique cuál es el entorno y la situación donde se plantea el problema. (Motivación)}
