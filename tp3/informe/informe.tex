@@ -510,6 +510,17 @@ Scheduling, se va a estar realizando una operación de, o \texttt{Input/Ouput}, 
 \texttt{CPU}, una por vez, cuando en un escenario más eficiente se podrían estar
 utilizando ambas cosas a la vez.
 
+\textbf{Uso de Espacio en Disco}:
+
+Relacionado al problema descripto anteriormente, existe también un inconveniente
+que se presenta al acaparar muchos \texttt{slots de Reduce} para un
+\texttt{job}. Dado que el Reduce utiliza y produce \texttt{datos intermedios},
+que son guardados en el disco, y que no son liberados hasta que todo el
+\texttt{job} termina, esto puede llevar a producir un \texttt{acaparamiento de
+disco}. En el peor caso, por ejemplo cuando hubiese muchos \texttt{jobs}
+corriendo al mismo tiempo, este se podría llenar, y para solucionar habría que
+descartar todos los datos de uno o varios \texttt{jobs}.
+
 \clearpage
 \subsection {\footnotesize Explique las soluciones propuestas}
 \label{investigacion-6}
