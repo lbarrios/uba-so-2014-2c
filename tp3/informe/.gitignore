@@ -1,0 +1,20 @@
+# Latex temporary files #
+#########################
+*.aux
+*.log
+*.out
+*.fdb_latexmk
+*.fls
+*.ilg
+*.ind
+*.idx
+*.toc
+
+# Build temporary folder #
+##########################
+build/
+
+# Sublime Files #
+#################
+*.sublime-project
+*.sublime-workspace
