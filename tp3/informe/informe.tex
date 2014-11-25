@@ -431,14 +431,29 @@ utilizados en el paper. Se describe un \texttt{job} como un conjunto de
 (también llamados \texttt{slaves} o \texttt{workers}) tiene una determinada
 cantidad de \texttt{slots de ejecución}, y conforme estos se van liberando el
 Scheduler le va asignando \texttt{tasks}, siendo que cada uno de estos ocupa
-un \texttt{slot}.
+un \texttt{slot}. 
 
 Problemas asociados a la Localidad de Datos:
-\textbf{Head-of-line scheduling}: Para explicar este concepto, el paper
-propone una métrica, \textbf{el porcentaje de localidad de un job en relación
-a su tamaño}. Utilizando esta métrica, dado un \texttt{job}, su porcentaje de
-localidad se ve representado por la cantidad de \texttt{nodos} en la que se
-encuentran distribuídos los datos de sus \texttt{tasks}, en relación al total.
+\textbf{Head-of-line scheduling}: Para explicar este concepto, el paper propone
+una métrica, \textbf{el porcentaje de localidad\footnote{En el paper se
+distingue entre localidad de nodo y localidad de rack; la idea sigue siendo la
+misma.} de un job en relación a su tamaño}. Utilizando esta métrica, dado un
+\texttt{job}, su porcentaje de localidad se ve representado por la cantidad de
+\texttt{nodos} en la que se encuentran distribuídos los datos de sus
+\texttt{tasks}, en relación al total. Se hace notar que el \texttt{porcentaje
+de localidad de un job} crece en relación a su tamaño (medido en cantidad de
+\texttt{tasks}), de forma tal que un \texttt{job} pequeño tiene mucha menos
+\texttt{localidad} que un \texttt{job} grande. Por otro lado, dado que se
+utiliza una cola \texttt{FIFO}, el siguiente \texttt{job} a ejecutar se
+encuentra de cierta forma \emph{predeterminado}, por lo que no es posible
+``elegir el más apropiado''.
+
+Asi, dado un \texttt{nodo} cualquiera al que se le hayan liberado uno o más
+\texttt{slots}, la probabilidad de que el siguiente \texttt{job} contenga un
+\texttt{task} cuyos datos se encuentren en ese \texttt{nodo}, es proporcional al
+tamaño del \texttt{job}. Y esto ocasiona problemas en los \texttt{jobs}
+pequeños, los cuales suelen ser justamente los que más necesidad de
+\textbf{interactividad} tienen.
 
 \textbf{Sticky Slots}:
 
