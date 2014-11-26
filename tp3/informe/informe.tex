@@ -389,11 +389,7 @@ en cualquier momento, y tener un tiempo de respuesta \textbf{aceptable}. Con
 la implementación del Scheduler FIFO de Hadoop, esto se volvía imposible,
 reduciendo significativamente la utilidad del sistema.
 
-\fixme
-
-
 \clearpage
-
 
 \subsection {\footnotesize Comente el background histórico del problema}
 \label{investigacion-4}
@@ -417,9 +413,9 @@ racks remotos.
 La gran desventaja del scheduler \texttt{FIFO} es el pésimo tiempo de respuesta
 para trabajos pequeños cuando se encuentran intercalados con trabajos grandes.
 Por ello, la primer solución que se implementó, es el mecanismo denominado
-\textbf{Hadoop On Demand (HOP)}.
-
-\fixme
+\textbf{Hadoop On Demand (HOD)}. Sin embargo, este mecanismo también ocasionó
+problemas, principalmente \textbf{baja localidad de los datos} y \textbf{baja
+utilización de los recursos},
 
 \clearpage
 \subsection {\footnotesize Explique otros problemas asociados a la búsqueda de una mejor solución}
@@ -510,9 +506,63 @@ Scheduling, se va a estar realizando una operación de, o \texttt{Input/Ouput}, 
 \texttt{CPU}, una por vez, cuando en un escenario más eficiente se podrían estar
 utilizando ambas cosas a la vez.
 
+\textbf{Uso de Espacio en Disco}:
+
+Relacionado al problema descripto anteriormente, existe también un inconveniente
+que se presenta al acaparar muchos \texttt{slots de Reduce} para un
+\texttt{job}. Dado que el Reduce utiliza y produce \texttt{datos intermedios},
+que son guardados en el disco, y que no son liberados hasta que todo el
+\texttt{job} termina, esto puede llevar a producir un \texttt{acaparamiento de
+disco}. En el peor caso, por ejemplo cuando hubiese muchos \texttt{jobs}
+corriendo al mismo tiempo, este se podría llenar, y para solucionar habría que
+descartar todos los datos de uno o varios \texttt{jobs}.
+
 \clearpage
 \subsection {\footnotesize Explique las soluciones propuestas}
 \label{investigacion-6}
+
+Para solucionar todos los inconvenientes descriptos, el paper propone un
+mecanismo de Scheduling que autodenominan \texttt{FAIR}. Este mecanismo está
+ideado para cumplir principalmente con dos características:
+
+\begin{itemize}
+    \item \textbf{Aislamiento}: brindarle a cada usuario la ilusión de estar
+    corriendo un cluster privado.
+    \item \textbf{Multiplexado Estadístico}: redistribuír en tiempo de ejecución
+    los recursos no utilizados.
+\end{itemize}
+
+Para lograr estos objetivos, se implementaron dos mecanismos:
+
+\textbf{Delay Scheduling}: para solucionar los \texttt{problemas de localidad de
+datos}. Para ello, cuando un \texttt{job} se encuentra en condiciones de que le
+sean asignados \texttt{slots}, el Scheduler se fija si este contiene
+\texttt{tasks} aptas para correr localmente en alguno de los \texttt{nodos} que
+tienen \texttt{slots disponibles}. En el caso en que esto no suceda, se lo
+saltea hasta encontrar algún \texttt{job} que contenta \texttt{tasks}
+apropiados. Para evitar \textbf{starvation}, se implementa un mecanismo de
+\textbf{timeout} mediante el cual, luego de transcurrido ese tiempo sin que le
+sean asignados \texttt{slots libres}, a un \texttt{job} se le permite correr
+tareas, aun cuando estas sean en forma no-local.
+
+\textbf{Copy-Compute Splitting}: para solucionar los \texttt{problemas de
+interdependencia}. Se propone dividir la operación de \texttt{Reduce} en dos
+tipos de \textbf{tareas independientes}, \texttt{tareas de copia} y
+\texttt{tareas de cómputo}. Para ello es posible dividir las tareas en dos
+procesos separados, pero esto traería muchas complicaciones desde el punto de
+vista del aislamiento de los procesos, ya que sería necesario en tal caso
+implementar un complejo mecanismo de \textbf{memoria compartida}. Se propone en
+cambio una solución que denominan \texttt{CPAC} (\texttt{Compute Phase Admission
+Control}), que básicamente se trata de reservar una cantidad de \texttt{slots de
+Reduce} mayor a la que el sistema soporta, llevando cuenta en todo momento de
+cuántos de estos están realizando operaciones de copia y cuántos están
+realizando cómputo. Asimismo, se limita la cantidad de slots que tienen permiso
+de copia y permiso de cómputo. Así, cada vez que una operación de
+\texttt{Reduce} requiere hacer copia o cómputo, primero le pide permiso al
+Scheduler. Así, se busca asegurar que, siendo $N_{min}$ la cantidad de slots de
+Reduce que soporta el nodo en cuestión, en todo momento haya a lo sumo $N_{min}$
+operaciones de copia y $N_{min}$ operaciones de cómputo corriendo
+concurrentemente.
 
 \clearpage
 \subsection {\footnotesize Evalúe soluciones propuestas}
