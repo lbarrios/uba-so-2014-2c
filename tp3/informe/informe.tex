@@ -423,7 +423,7 @@ utilizados en el paper. Se describe un \texttt{job} como un conjunto de
 (también llamados \texttt{slaves} o \texttt{workers}) tiene una determinada
 cantidad de \texttt{slots de ejecución}, y conforme estos se van liberando el
 Scheduler le va asignando \texttt{tasks}, siendo que cada uno de estos ocupa
-un \texttt{slot}. 
+un \texttt{slot}.
 
 \centerbf{Problemas asociados a la Localidad de Datos}
 
@@ -490,7 +490,7 @@ utilización de los \texttt{slots}: cuando un \texttt{job} se compone de miles d
 necesario para ser utilizado por \texttt{Reduce}. De esta forma, se comienzan a
 reservar slots para \texttt{Reduce}, los cuales serán ``brevemente'' utilizados
 para procesar los output de los map (se procesa un output por slot), y luego
-quedarán bloqueados hasta el momento en que el \texttt{job} finalice. 
+quedarán bloqueados hasta el momento en que el \texttt{job} finalice.
 
 La segunda complicación tiene que ver con la mala administración de los recursos
 dentro de la misma operación de \texttt{Reduce}. Dado que la operación se
@@ -566,6 +566,12 @@ concurrentemente.
 \subsection {\footnotesize Evalúe soluciones propuestas}
 \label{investigacion-7}
 
+Se evaluaron los algoritmos en un caso de benchmark grande, del tamaño de las tareas de producción en Facebook. El entorno principal de evaluación fue Amazon's Elastic Compute Cloud\footnote{http://aws.amazon.com/ec2/}.
+
+Se pudo ver que el fair sharing disminuye a la mitad el tiempo de respuesta promedio comparado con FIFO en jobs pequeños, a expensas de un pequeño aumento frente a jobs grandes. Sin embargo, algunos jobs todavía eran demorados por el $reduce\ slot\ hoarding$. Al introducir el copy-compute splitting, el fair sharing obtuvo una mejora de hasta 4.6x en jobs pequeños.
+
+El $delay\ scheduling$ permitió pasar de un porcentaje previo de localidad de 27-90\% a un asombroso nivel de 99-100\%. Para una cantidad de 50 tareas concurrentes, aumentó el throughput por un factor de $2.0$. Por otra parte, el tiempo de respuesta no presentó mejoras significativas.
+
 \clearpage
 \subsection {\footnotesize Discusión}
 \label{investigacion-8}
@@ -573,12 +579,12 @@ concurrentemente.
 El trabajo desarrollado en el paper consiste en encontrar un punto
 intermedio óptimo entre tener un cluster separado para cada usuario (
 que provee gran aislamiento pero una pobre utilización) y tener un único
-cluster FIFO (que provee gran utilización pero ningún tipo de 
-aislamiento entre usuarios). 
+cluster FIFO (que provee gran utilización pero ningún tipo de
+aislamiento entre usuarios).
 
-Se identificaron dos aspectos en el manejo de un cluster de datos 
+Se identificaron dos aspectos en el manejo de un cluster de datos
 intensivo que generan problemas: localidad de datos e interdependencia
-entre tareas. A pesar de que hasta aquí  todo giró en torno a MapReduce, estos 
+entre tareas. A pesar de que hasta aquí  todo giró en torno a MapReduce, estos
 problemas son importantes en cualquier cluster de cómputos que utilize
 grafos dirigidos aciclicos de procesos para efectuar cómputos, ya que este
 tipo de sistema necesita colocar tareas en nodos que contienen sus inputs, y
@@ -590,13 +596,13 @@ como por ejemplo \texttt{sticky slot}  y \texttt{head-of-line scheduling}.
 \label{investigacion-9}
 
 A pesar de que MapReduce ha sido un modelo de ejecución muy popular y exitoso
-para largos \texttt{batch jobs}, muchas empresas han comenzado a compartir 
+para largos \texttt{batch jobs}, muchas empresas han comenzado a compartir
 sus clusters de MapReduce entre múltiples usuarios, corriendo así una mezcla
 de trabajos \texttt{batch} e \texttt{interactivos}. En el paper se propone
 FAIR, un scheduler justo que permite aislamiento entre usuarios, bajo tiempo
-de respuesta y alto \texttt{throughput}. Para lidiar con los problemas que este 
-scheduling genera (localidad de datos e interdependencia entre tareas), 
-se pueden emplear dos técnicas simples y robustas: delay scheduling y 
+de respuesta y alto \texttt{throughput}. Para lidiar con los problemas que este
+scheduling genera (localidad de datos e interdependencia entre tareas),
+se pueden emplear dos técnicas simples y robustas: delay scheduling y
 copy-compute splitting.
 
 \clearpage
