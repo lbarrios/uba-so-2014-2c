@@ -546,7 +546,23 @@ sean asignados \texttt{slots libres}, a un \texttt{job} se le permite correr
 tareas, aun cuando estas sean en forma no-local.
 
 \textbf{Copy-Compute Splitting}: para solucionar los \texttt{problemas de
-interdependencia}.
+interdependencia}. Se propone dividir la operación de \texttt{Reduce} en dos
+tipos de \textbf{tareas independientes}, \texttt{tareas de copia} y
+\texttt{tareas de cómputo}. Para ello es posible dividir las tareas en dos
+procesos separados, pero esto traería muchas complicaciones desde el punto de
+vista del aislamiento de los procesos, ya que sería necesario en tal caso
+implementar un complejo mecanismo de \textbf{memoria compartida}. Se propone en
+cambio una solución que denominan \texttt{CPAC} (\texttt{Compute Phase Admission
+Control}), que básicamente se trata de reservar una cantidad de \texttt{slots de
+Reduce} mayor a la que el sistema soporta, llevando cuenta en todo momento de
+cuántos de estos están realizando operaciones de copia y cuántos están
+realizando cómputo. Asimismo, se limita la cantidad de slots que tienen permiso
+de copia y permiso de cómputo. Así, cada vez que una operación de
+\texttt{Reduce} requiere hacer copia o cómputo, primero le pide permiso al
+Scheduler. Así, se busca asegurar que, siendo $N_{min}$ la cantidad de slots de
+Reduce que soporta el nodo en cuestión, en todo momento haya a lo sumo $N_{min}$
+operaciones de copia y $N_{min}$ operaciones de cómputo corriendo
+concurrentemente.
 
 \clearpage
 \subsection {\footnotesize Evalúe soluciones propuestas}
