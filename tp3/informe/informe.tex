@@ -22,7 +22,6 @@
 %-- A partir de aquí, pongo el contador de páginas en 1 --
 \setcounter{page}{1}
 
-\index{Implementación de Map-Reduce}
 \section{Implementación de Map-Reduce}
 
 \subsection{Encontrar el subreddit con mayor score promedio}
@@ -288,7 +287,6 @@ Los únicos resultados arrojados fueron:
 \end{center}
 
 \clearpage
-\index{Investigación}
 \section{Investigación}
 Para esta parte del TP se pide leer e interpretar el paper <<\textbf{Job
 Scheduling for Multi- User MapReduce
@@ -344,9 +342,8 @@ rendimiento de entre 2 y 10 veces en comparación con el mecanismo presentado en
 el paper. Los dos principales aspectos problemáticos fueron la \emph{localidad
 de datos}, y la \emph{interdependencia entre las operaciones Map y Reduce}.
 
-\begin{center}
-\textbf{Localidad de Datos}
-\end{center}
+\subsubsection{Localidad de Datos:}
+
 Este problema comprende la necesidad inherente de la técnica MapReduce de tener
 acceso local a los datos con los cuales se están trabajando. Esta necesidad se
 debe principalmente a que a diferencia de los algoritmos ``\texttt{CPU-
@@ -362,9 +359,8 @@ y la transmisión de datos entre distintos servidores. Este defecto se puede
 observar principalmente en \textbf{trabajos pequeños y/o concurrentes}.
 
 
-\begin{center}
-\textbf{Interdependencia}
-\end{center}
+\subsubsection{Interdependencia:}
+
 Se entiende por interdependencia a la necesidad de que todas las tareas de
 \texttt{map} se encuentren finalizadas al momento de iniciar la ejecución de
 \texttt{reduce}. Es fácil percibir la gran cantidad de inconvenientes que esto
@@ -433,7 +429,7 @@ un \texttt{slot}.
 
 % - HOL Scheduling
 
-\textbf{Head-of-line scheduling}:
+\subsubsection{Head-of-line scheduling}: 
 
 Para explicar este concepto, el paper propone
 una métrica, \textbf{el porcentaje de localidad\footnote{En el paper se
@@ -458,7 +454,7 @@ pequeños, los cuales suelen ser justamente los que más necesidad de
 
 % - Sticky slots
 
-\textbf{Sticky Slots}:
+\subsubsection{Sticky Slots}:
 
 Este problema puede aparecer incluso con \texttt{jobs} de tamaño grande. Se
 puede entender con el siguiente ejemplo: Tenemos 10 \texttt{jobs} con 10
@@ -472,7 +468,7 @@ baja \texttt{localidad}, la sigue manteniendo hasta el final.
 
 \centerbf{Problemas asociados a la Interdependencia de Map-Reduce}
 
-\textbf{Reduce Slot Hoarding}:
+\subsubsection{Reduce Slot Hoarding:}
 
 Este problema está relacionado con la operación de \texttt{Reduce}. Para
 entenderlo, es necesario recordar brevemente qué es lo que hace una operación
@@ -506,7 +502,7 @@ Scheduling, se va a estar realizando una operación de, o \texttt{Input/Ouput}, 
 \texttt{CPU}, una por vez, cuando en un escenario más eficiente se podrían estar
 utilizando ambas cosas a la vez.
 
-\textbf{Uso de Espacio en Disco}:
+\subsubsection{Uso de Espacio en Disco:}
 
 Relacionado al problema descripto anteriormente, existe también un inconveniente
 que se presenta al acaparar muchos \texttt{slots de Reduce} para un
@@ -534,7 +530,8 @@ ideado para cumplir principalmente con dos características:
 
 Para lograr estos objetivos, se implementaron dos mecanismos:
 
-\textbf{Delay Scheduling}: para solucionar los \texttt{problemas de localidad de
+\subsubsection{Delay Scheduling:}
+para solucionar los \texttt{problemas de localidad de
 datos}. Para ello, cuando un \texttt{job} se encuentra en condiciones de que le
 sean asignados \texttt{slots}, el Scheduler se fija si este contiene
 \texttt{tasks} aptas para correr localmente en alguno de los \texttt{nodos} que
@@ -545,7 +542,8 @@ apropiados. Para evitar \textbf{starvation}, se implementa un mecanismo de
 sean asignados \texttt{slots libres}, a un \texttt{job} se le permite correr
 tareas, aun cuando estas sean en forma no-local.
 
-\textbf{Copy-Compute Splitting}: para solucionar los \texttt{problemas de
+\subsubsection{Copy-Compute Splitting:}
+para solucionar los \texttt{problemas de
 interdependencia}. Se propone dividir la operación de \texttt{Reduce} en dos
 tipos de \textbf{tareas independientes}, \texttt{tareas de copia} y
 \texttt{tareas de cómputo}. Para ello es posible dividir las tareas en dos
